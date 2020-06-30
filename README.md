@@ -4,11 +4,11 @@ An app to predict CONFIRM/DENIED for the H1B and PERM application.
 
 ### To run the app
 
-1. create virtual environment
+1. create virtual environment  
 virtualenv -p python3.7 venv
-2. install packages
+2. install packages  
 pip install -r conf/requirements.txt
-3. spin on app
+3. spin on app  
 python ui.py
 
 #### Note
