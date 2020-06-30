@@ -1,0 +1,12 @@
+xlrd
+scikit-learn
+numpy 
+pandas
+pyteomics
+matplotlib
+lxml
+dash
+dash-bootstrap-components
+natsort
+dash_bio
+dash_daq

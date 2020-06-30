@@ -1,0 +1,135 @@
+Metadata-Version: 2.1
+Name: pyteomics
+Version: 4.3.2
+Summary: A framework for proteomics data analysis.
+Home-page: http://pyteomics.readthedocs.io
+Author: Anton Goloborodko & Lev Levitsky
+Author-email: pyteomics@googlegroups.com
+License: License :: OSI Approved :: Apache Software License
+Project-URL: Documentation, http://pyteomics.readthedocs.io
+Project-URL: Source Code, https://github.com/levitsky/pyteomics
+Project-URL: Issue Tracker, https://github.com/levitsky/pyteomics/issues
+Project-URL: Mailing List, https://groups.google.com/group/pyteomics
+Platform: UNKNOWN
+Classifier: Intended Audience :: Science/Research
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Education
+Classifier: Topic :: Scientific/Engineering :: Bio-Informatics
+Classifier: Topic :: Scientific/Engineering :: Chemistry
+Classifier: Topic :: Scientific/Engineering :: Physics
+Classifier: Topic :: Software Development :: Libraries
+Provides-Extra: df
+Requires-Dist: pandas ; extra == 'df'
+Provides-Extra: tda
+Requires-Dist: numpy ; extra == 'tda'
+Provides-Extra: unimod
+Requires-Dist: lxml ; extra == 'unimod'
+Requires-Dist: sqlalchemy ; extra == 'unimod'
+Provides-Extra: xml
+Requires-Dist: lxml ; extra == 'xml'
+Requires-Dist: numpy ; extra == 'xml'
+Provides-Extra: graphics
+Requires-Dist: matplotlib ; extra == 'graphics'
+Provides-Extra: numpress
+Requires-Dist: pynumpress ; extra == 'numpress'
+
+.. image:: https://img.shields.io/pypi/v/pyteomics.svg
+    :target: https://pypi.org/project/pyteomics/
+    :alt: PyPI
+
+.. image:: https://img.shields.io/readthedocs/pyteomics.svg
+    :target: https://pyteomics.readthedocs.io/
+    :alt: Read the Docs (latest)
+
+.. image:: https://img.shields.io/aur/license/python-pyteomics.svg
+    :target: https://www.apache.org/licenses/LICENSE-2.0
+    :alt: Apache License
+
+.. image:: https://img.shields.io/aur/version/python-pyteomics.svg
+    :target: https://aur.archlinux.org/packages/python-pyteomics/
+    :alt: python-pyteomics on AUR
+
+.. image:: https://img.shields.io/badge/pyteomics-awesome-orange.svg
+    :alt: Pyteomics is awesome
+
+
+What is Pyteomics?
+------------------
+
+Pyteomics is a collection of lightweight and handy tools for Python that help
+to handle various sorts of proteomics data. Pyteomics provides a growing set of
+modules to facilitate the most common tasks in proteomics data analysis, such as:
+
+* calculation of basic physico-chemical properties of polypeptides:
+
+  * mass and isotopic distribution
+  * charge and pI
+  * chromatographic retention time
+
+* access to common proteomics data:
+
+  * MS or LC-MS data
+  * FASTA databases
+  * search engines output
+
+* easy manipulation of sequences of modified peptides and proteins
+
+The goal of the Pyteomics project is to provide a versatile, reliable and
+well-documented set of open tools for the wide proteomics community.
+One of the project's key features is Python itself, an open source language
+increasingly popular in scientific programming. The main
+applications of the library are reproducible statistical data analysis and rapid
+software prototyping.
+
+Supported Python versions
+-------------------------
+
+Pyteomics supports Python 2.7 and Python 3.3+.
+
+Project dependencies
+--------------------
+
+Pyteomics uses the following Python packages:
+
+ - `numpy <http://pypi.python.org/pypi/numpy>`_
+ - `matplotlib <http://sourceforge.net/projects/matplotlib/files/matplotlib/>`_
+   (used by **pyteomics.pylab_aux**)
+ - `lxml <http://pypi.python.org/pypi/lxml>`_ (used by XML parsing modules)
+ - `pandas <http://pandas.pydata.org/>`_ (can be used with **pyteomics.pepxml**,
+   **pyteomics.tandem**, **pyteomics.mzid**, **pyteomics.auxiliary**)
+ - `sqlalchemy <http://www.sqlalchemy.org/>`_ (used by **pyteomics.mass.unimod**)
+ - `pynumpress <https://pypi.org/project/pynumpress/>`_ (adds support for Numpress compression)
+
+All dependencies are optional.
+
+GNU/Linux
+---------
+
+The preferred way to obtain Pyteomics is via `pip Python package manager <https://pip.pypa.io/>`_.
+The shell code for a freshly installed Ubuntu system::
+
+    sudo apt-get install python-setuptools python-dev build-essential
+    sudo easy_install pip
+    sudo pip install lxml numpy matplotlib pyteomics
+
+Arch-based distros
+..................
+
+On Arch Linux and related distros, you can install Pyteomics from AUR:
+
+ - `python-pyteomics <https://aur.archlinux.org/packages/python-pyteomics/>`_
+ - `python2-pyteomics <https://aur.archlinux.org/packages/python2-pyteomics/>`_
+
+
+Windows
+-------
+
+- `Get pip <https://pip.pypa.io/en/stable/installing/>`_, if you don't have it yet.
+
+- Install Pyteomics and its dependencies::
+
+    pip install lxml numpy matplotlib pyteomics
+
+
+
