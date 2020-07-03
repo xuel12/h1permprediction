@@ -23,6 +23,8 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 import dash_daq as daq
+from dash_extensions.callback import DashCallbackBlueprint
+
 
 import pandas as pd
 
@@ -53,6 +55,7 @@ if not os.path.exists(download_dir):
 # except: 
 #     print("Something wrong with specified directory. Exception- ", sys.exc_info())
     
+dcb = DashCallbackBlueprint() 
     
 # external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 external_stylesheets=[dbc.themes.BOOTSTRAP]
@@ -181,7 +184,16 @@ app.layout = html.Div(
 )
 
 
-                 
+# @dcb.callback(Output("div", "children"), [Input("btn1", "n_clicks")])
+# def click_btn1(n_clicks):
+#     return "You clicked btn1"
+
+
+# @dcb.callback(Output("div", "children"), [Input("btn2", "n_clicks")]) 
+# def click_btn2(n_clicks):
+#     return "You clicked btn2"
+
+
 @app.callback(
     Output("file-list", "children"),
     [Input("upload-data", "filename"), Input("upload-data", "contents")],
@@ -256,10 +268,13 @@ def update_combinedata(count_newcsv, value):  # define the function reaching out
     if count_newcsv != -1:
         temp_dir = folderStruct(base_path)['temp_dir']
         input_dir = folderStruct(base_path)['input_dir']
-
+        header_dir = folderStruct(base_path)['header_dir']
+        outputfile = 'h1b2015to2020.csv'
+        headerfile = 'headers.csv'
+        
         # read in csv to dataframe
-        if count_newcsv > 0 or not os.path.exists(temp_dir+'bigcsv.csv'):
-            csvCombine(input_dir, temp_dir)
+        if count_newcsv > 0 or not os.path.exists(temp_dir + outputfile):
+            csvCombine(input_dir, temp_dir, header_dir, outputfile, headerfile)
             
         finish_message = 'Data parsing complete, find the parsed combineCSV in directory'
         # return progress, f"{progress} %" if progress >= 5 else ""
@@ -349,6 +364,7 @@ def folderStruct(BASE_PATH):
     MODEL_DIR = BASE_PATH + "model/"
     # OUTPUT_DIR = BASE_PATH + "output/"
     DOWNLOAD_DIR = BASE_PATH + "download/"
+    HEADER_DIR = BASE_PATH + 'header/'
 
     os.chdir(CODE_DIR)
     # base_path = BASE_PATH
@@ -364,8 +380,14 @@ def folderStruct(BASE_PATH):
     download_dir = DOWNLOAD_DIR
     if not os.path.exists(download_dir):
         os.makedirs(download_dir)
+    header_dir = HEADER_DIR
+    if not os.path.exists(header_dir):
+        os.makedirs(header_dir)
+
+
     return {'input_dir':input_dir, 'temp_dir':temp_dir, 'model_dir':model_dir,
-            'download_dir':download_dir, 'BASE_PATH':BASE_PATH, 'CODE_DIR':CODE_DIR} 
+            'download_dir':download_dir, 'BASE_PATH':BASE_PATH, 'CODE_DIR':CODE_DIR,
+            'header_dir':header_dir} 
 
 
 # convert xlsx to csv
@@ -390,22 +412,99 @@ def xlsx2csv(in_dir):
                 
 
 # read each csv to df and then concatenate
-def csvCombine(in_dir, temp_dir):
-    outputcsv = temp_dir+'bigcsv.csv' #specify filepath+filename of output csv
-    csv_path = in_dir
+# def csvCombine(in_dir, temp_dir):
+#     outputcsv = temp_dir+'bigcsv.csv' #specify filepath+filename of output csv
+#     csv_path = in_dir
 
-    listofdataframes = []
-    for file in glob.glob(csv_path+'*.csv'):
-        df = pd.read_csv(file)
-        if df.shape[1] > 0: # make sure there are columns
-            listofdataframes.append(df)
-        else:
-            print('{} has {} columns - skipping'.format(file,df.shape[1]))   
-    bigdataframe = pd.concat(listofdataframes).reset_index(drop=True)
-    bigdataframe.to_csv(outputcsv,index=False)
+#     listofdataframes = []
+#     for file in glob.glob(csv_path+'*.csv'):
+#         df = pd.read_csv(file)
+#         if df.shape[1] > 0: # make sure there are columns
+#             listofdataframes.append(df)
+#         else:
+#             print('{} has {} columns - skipping'.format(file,df.shape[1]))   
+#     bigdataframe = pd.concat(listofdataframes).reset_index(drop=True)
+#     bigdataframe.to_csv(outputcsv,index=False)
     
+def csvCombine(in_dir, temp_dir, header_dir, outputfile, headerfile):    
+    # outputfile = temp_dir+outputfile    #specify filepath+filename of output csv
+
+    # use header mapping file for parsing
+    headers_df = pd.read_csv(header_dir+headerfile, index_col=0)
+
+    # loop through all csv files in header file
+    listofdataframes = []
+    # csvfilenames = 'H-1B_Disclosure_Data_FY15_Q4'
+    for csvfilenames in headers_df.to_dict().keys():
+        csvfile = input_dir + csvfilenames + '.csv'
+        if os.path.exists(csvfile):
+            headers_temp = headers_df[csvfilenames]
+            df = pd.read_csv(csvfile, usecols=headers_temp.dropna(),
+                     dtype='str', 
+                     parse_dates=[headers_temp['CASE_SUBMITTED']]).dropna(how='all')
+            # filter rows, Remove "Withdraw" and "Certified Expired"
+            df = df[((df['CASE_STATUS'].str.upper() == 'CERTIFIED') | \
+                     (df['CASE_STATUS'].str.upper() == 'DENIED')) & \
+                    (df['VISA_CLASS'].str.upper() == 'H-1B')]  
+               
+            # Similarly, most of employer come from the U.S.. We only keep application with American employer
+            df = df[df.EMPLOYER_COUNTRY == 'UNITED STATES OF AMERICA']
+     
+            headers_temp_dict = {y:x for x,y in headers_temp.dropna().items()}
+            df = df.rename(columns=headers_temp_dict)
+            if df.shape[1] > 0: # make sure there are columns
+                listofdataframes.append(df)
+                print(csvfilenames + ' Done')
+            else:
+                print('{} has {} columns - skipping'.format(csvfilenames,df.shape[1]))
+    df = pd.concat(listofdataframes).reset_index(drop=True)
+
+    # uppercase all string for consistency  
+    df = df.apply(lambda x: x.astype(str).str.upper())
+    df['CASE_SUBMITTED'] = pd.to_datetime(df['CASE_SUBMITTED'])
+    # df1 = df.fillna(value={'PREVAILING_WAGE': 0.0})
+    # df2 = df1[df1["PREVAILING_WAGE"] == 'NAN']
 
 
+    # mapping value based on mapping file    
+    df['PW_WAGE_LEVEL'] = df['PW_WAGE_LEVEL'].replace(constants.PW_WAGE_LEVEL_MAP)
+    df = df.replace({'PW_WAGE_LEVEL': constants.PW_WAGE_LEVEL_MAP, 
+                       'EMPLOYER_STATE': constants.US_STATE_ABBREV,
+                       'WORKSITE_STATE': constants.US_STATE_ABBREV,
+                       "PREVAILING_WAGE": {'NAN': -1},
+                       "PW_UNIT_OF_PAY": {'NAN': 'UNKNOWN'},
+                       })
+    df["PREVAILING_WAGE"] = pd.to_numeric(df["PREVAILING_WAGE"], downcast="float")
+    df = df.replace({'NAN': 'UNKOWN'})
+
+    # feature engineer on jobs
+    df["EMPLOYER_NAME"]=df["EMPLOYER_NAME"].str.replace("INC.","INC")
+    df['JOB_CATEGORY']=df['SOC_CODE'].apply(lambda x: jobClassifier(x))
+    df['JOB_LEVEL']=df['JOB_TITLE'].apply(lambda x: levelClassifier(x))
+
+    df.to_csv(temp_dir+outputfile, index=False)
+
+    print('There are {} records.'.format(df.shape[0]))
+    # return df
+
+
+def jobClassifier(soc_code):
+    soc_map = constants.SOC_MAP
+    soc = str(soc_code).split('-')[0]        
+    return soc_map.get(soc,'OTHER')
+
+
+def levelClassifier(job_title):
+    job_title = str(job_title)
+    if job_title.find('SENIOR')!=-1 or job_title.find(' II')!=-1 or job_title.find('2')!=-1 or job_title.find('3')!=-1:
+        return 'SENIOR'
+    elif job_title.find('JUNIOR')!=-1 or job_title.find(' I')!=-1 or job_title.find('1')!=-1:
+        return 'JUNIOR'
+    else:
+        return 'OTHER'
+    
+    
+dcb.register(app)  
 
 
 if __name__ == "__main__":

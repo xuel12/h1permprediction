@@ -10,3 +10,4 @@ dash-bootstrap-components
 natsort
 dash_bio
 dash_daq
+dash_extensions

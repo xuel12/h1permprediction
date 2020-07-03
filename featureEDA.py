@@ -67,50 +67,50 @@ def xlsx2csv(in_dir):
 
 
 # read each csv to df and then concatenate
-def csvCombine(in_dir, temp_dir):
-    outputcsv = temp_dir+'bigcsv.csv' #specify filepath+filename of output csv
-    csv_path = in_dir
+# def csvCombine(in_dir, temp_dir):
+#     outputcsv = temp_dir+'bigcsv.csv' #specify filepath+filename of output csv
+#     csv_path = in_dir
 
-    listofdataframes = []
-    for file in glob.glob(csv_path+'*.csv'):
-        df = pd.read_csv(file)
-        if df.shape[1] > 0: # make sure there are columns
-            listofdataframes.append(df)
-        else:
-            print('{} has {} columns - skipping'.format(file,df.shape[1]))
+#     listofdataframes = []
+#     for file in glob.glob(csv_path+'*.csv'):
+#         df = pd.read_csv(file)
+#         if df.shape[1] > 0: # make sure there are columns
+#             listofdataframes.append(df)
+#         else:
+#             print('{} has {} columns - skipping'.format(file,df.shape[1]))
     
-    bigdataframe = pd.concat(listofdataframes).reset_index(drop=True)
-    bigdataframe.to_csv(outputcsv,index=False)
+#     bigdataframe = pd.concat(listofdataframes).reset_index(drop=True)
+#     bigdataframe.to_csv(outputcsv,index=False)
     
     
 
-def cleanupH1B19(H1B19_csvfile):
-    col_types = constants.COL_TYPES
-    parse_dates = constants.PARSE_DATES
+# def cleanupH1B19(H1B19_csvfile):
+#     col_types = constants.COL_TYPES
+#     parse_dates = constants.PARSE_DATES
     
-    H1B19 = pd.read_csv(H1B19_csvfile, 
-                        # header=None, names=headers, 
-                        dtype=col_types, parse_dates=parse_dates,low_memory=True).dropna(how='all')
+#     H1B19 = pd.read_csv(H1B19_csvfile, 
+#                         # header=None, names=headers, 
+#                         dtype=col_types, parse_dates=parse_dates,low_memory=True).dropna(how='all')
     
-    # keep certain columns for analysis
-    headers = constants.HEADERS
-    H1B19 = H1B19[headers]
+#     # keep certain columns for analysis
+#     headers = constants.HEADERS
+#     H1B19 = H1B19[headers]
 
-    # miss labeling the header in the original table
-    H1B19 = H1B19.rename(columns={"NAME_OF_HIGHEST_STATE_COURT": "STATE_OF_HIGHEST_COURT"})
-    # filter H1B rows, Remove "Withdraw" and "Certified Expired"
-    H1B19 = H1B19[((H1B19['CASE_STATUS'].str.upper() == 'CERTIFIED') | \
-                               (H1B19['CASE_STATUS'].str.upper() == 'DENIED')) & \
-                              (H1B19['VISA_CLASS'].str.upper() == 'H-1B')]  
-    # Similarly, most of employer come from the U.S.. We only keep application with American employer
-    H1B19 = H1B19[H1B19.EMPLOYER_COUNTRY == 'UNITED STATES OF AMERICA']
-    print('There are {} records.'.format(H1B19.shape[0]))
+#     # miss labeling the header in the original table
+#     H1B19 = H1B19.rename(columns={"NAME_OF_HIGHEST_STATE_COURT": "STATE_OF_HIGHEST_COURT"})
+#     # filter H1B rows, Remove "Withdraw" and "Certified Expired"
+#     H1B19 = H1B19[((H1B19['CASE_STATUS'].str.upper() == 'CERTIFIED') | \
+#                                (H1B19['CASE_STATUS'].str.upper() == 'DENIED')) & \
+#                               (H1B19['VISA_CLASS'].str.upper() == 'H-1B')]  
+#     # Similarly, most of employer come from the U.S.. We only keep application with American employer
+#     H1B19 = H1B19[H1B19.EMPLOYER_COUNTRY == 'UNITED STATES OF AMERICA']
+#     print('There are {} records.'.format(H1B19.shape[0]))
 
-    # dateformat standardization
-    for datecol in parse_dates:
-        H1B19[datecol] = H1B19[datecol].dt.date
+#     # dateformat standardization
+#     for datecol in parse_dates:
+#         H1B19[datecol] = H1B19[datecol].dt.date
         
-    return H1B19
+#     return H1B19
 
 
 def jobClassifier(soc_code):
@@ -128,13 +128,77 @@ def levelClassifier(job_title):
     else:
         return 'OTHER'
     
-    
+# read each csv to df and then concatenate
+def combineCSV(input_dir, temp_dir, header_dir, outputfile, headerfile):    
+    # outputfile = temp_dir+outputfile    #specify filepath+filename of output csv
+
+    # use header mapping file for parsing
+    headers_df = pd.read_csv(header_dir+headerfile, index_col=0)
+
+    # loop through all csv files in header file
+    listofdataframes = []
+    # csvfilenames = 'H-1B_Disclosure_Data_FY15_Q4'
+    for csvfilenames in headers_df.to_dict().keys():
+        csvfile = input_dir + csvfilenames + '.csv'
+        if os.path.exists(csvfile):
+            headers_temp = headers_df[csvfilenames]
+            df = pd.read_csv(csvfile, usecols=headers_temp.dropna(),
+                     dtype='str', 
+                     parse_dates=[headers_temp['CASE_SUBMITTED']]).dropna(how='all')
+            # filter rows, Remove "Withdraw" and "Certified Expired"
+            df = df[((df['CASE_STATUS'].str.upper() == 'CERTIFIED') | \
+                     (df['CASE_STATUS'].str.upper() == 'DENIED')) & \
+                    (df['VISA_CLASS'].str.upper() == 'H-1B')]  
+               
+            # Similarly, most of employer come from the U.S.. We only keep application with American employer
+            df = df[df.EMPLOYER_COUNTRY == 'UNITED STATES OF AMERICA']
+     
+            headers_temp_dict = {y:x for x,y in headers_temp.dropna().items()}
+            df = df.rename(columns=headers_temp_dict)
+            if df.shape[1] > 0: # make sure there are columns
+                listofdataframes.append(df)
+                print(csvfilenames + ' Done')
+            else:
+                print('{} has {} columns - skipping'.format(csvfilenames,df.shape[1]))
+    df = pd.concat(listofdataframes).reset_index(drop=True)
+
+    # uppercase all string for consistency  
+    df = df.apply(lambda x: x.astype(str).str.upper())
+    df['CASE_SUBMITTED'] = pd.to_datetime(df['CASE_SUBMITTED'])
+    # df1 = df.fillna(value={'PREVAILING_WAGE': 0.0})
+    # df2 = df1[df1["PREVAILING_WAGE"] == 'NAN']
+
+
+    # mapping value based on mapping file    
+    df['PW_WAGE_LEVEL'] = df['PW_WAGE_LEVEL'].replace(constants.PW_WAGE_LEVEL_MAP)
+    df = df.replace({'PW_WAGE_LEVEL': constants.PW_WAGE_LEVEL_MAP, 
+                       'EMPLOYER_STATE': constants.US_STATE_ABBREV,
+                       'WORKSITE_STATE': constants.US_STATE_ABBREV,
+                       "PREVAILING_WAGE": {'NAN': -1},
+                       "PW_UNIT_OF_PAY": {'NAN': 'UNKNOWN'},
+                       })
+    df["PREVAILING_WAGE"] = pd.to_numeric(df["PREVAILING_WAGE"], downcast="float")
+    df = df.replace({'NAN': 'UNKOWN'})
+
+    # feature engineer on jobs
+    df["EMPLOYER_NAME"]=df["EMPLOYER_NAME"].str.replace("INC.","INC")
+    df['JOB_CATEGORY']=df['SOC_CODE'].apply(lambda x: jobClassifier(x))
+    df['JOB_LEVEL']=df['JOB_TITLE'].apply(lambda x: levelClassifier(x))
+
+    df.to_csv(temp_dir+outputfile, index=False)
+
+    print('There are {} records.'.format(df.shape[0]))
+    return df
+
+
+
 if __name__ == "__main__":
     
     os.chdir(constants.CODE_DIR)
     code_dir = constants.CODE_DIR
-    in_dir = constants.IN_DIR
+    input_dir = constants.INPUT_DIR
     temp_dir = constants.TEMP_DIR
+    header_dir = constants.HEADER_DIR
     if not os.path.exists(temp_dir):
         os.makedirs(temp_dir)
 
@@ -146,12 +210,19 @@ if __name__ == "__main__":
 
     # convert xlsx to csv for faster process
     t0 = time.time()
-    xlsx2csv(in_dir)
+    xlsx2csv(input_dir)
     t1 = time.time()
     
     # read in csv to dataframe
     # csvCombine(in_dir, temp_dir)
-    H1B19 = cleanupH1B19(H1B19_csvfile = '../input/H-1B_Disclosure_Data_FY2019.csv')
+    df = combineCSV(input_dir, temp_dir, header_dir, 
+                    outputfile = 'h1b2015to2020.csv', headerfile = 'headers.csv')
+    # df = pd.read_csv(temp_dir+'bigcsv.csv',parse_dates=['CASE_SUBMITTED'])
+
+    df1 = df.sample(frac=0.001, replace=False, random_state=1).copy()
+    df1.dtypes
+
+    # H1B19 = cleanupH1B19(H1B19_csvfile = '../input/H-1B_Disclosure_Data_FY2019.csv')
     t2 = time.time()
     t_xlsx2csv = t1 - t0
     t_readcsv = t2 - t1
