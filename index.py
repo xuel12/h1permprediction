@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sat Jun 27 15:03:17 2020
+Created on Sat Jul  4 17:31:03 2020
 
 @author: xuel12
 """
@@ -20,10 +20,14 @@ from flask import Flask, send_from_directory
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
-import dash_daq as daq
+import dash_bootstrap_components as dbc
 from dash_extensions.callback import DashCallbackBlueprint
+
+# from app import App, build_graph
+from homepage import Homepage
+from train import Training
+from eda import EDA
 
 
 import pandas as pd
@@ -49,23 +53,20 @@ download_dir = constants.DOWNLOAD_DIR
 if not os.path.exists(download_dir):
     os.makedirs(download_dir)
 
-# try: 
-#     default_train_df = pd.read_csv(temp_dir + 'bigcsv.csv')
-#     print("Current directory is {}".format(os.getcwd()))
-# except: 
-#     print("Something wrong with specified directory. Exception- ", sys.exc_info())
     
 dcb = DashCallbackBlueprint() 
+    
+# # Normally, Dash creates its own Flask server internally. By creating our own,
+# # we can create a route for downloading files directly:
+server = Flask(__name__)
     
 # external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 external_stylesheets=[dbc.themes.BOOTSTRAP]
 
-# Normally, Dash creates its own Flask server internally. By creating our own,
-# we can create a route for downloading files directly:
-server = Flask(__name__)
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-# app = dash.Dash(__name__)
+# app = dash.Dash(__name__, external_stylesheets=[dbc.themes.UNITED])
 
+app.config.suppress_callback_exceptions = True
 
 
 @server.route(constants.DOWNLOAD_DIR + "<path:path>")
@@ -74,125 +75,22 @@ def download(path):
     return send_from_directory(input_dir, path, as_attachment=True)
 
 
-app.layout = html.Div(
-    [
-        # App name and description
-        html.Div([
-            dbc.Row([html.H1("PREDICTION FOR H-1B & PERM")], justify="center", align="center", className="h-50"),
-            dbc.Row([html.P('A dashboard for predicting success rate of H1B and PERM')], justify="center", align="center", className="h-50"),
-            html.Br(),
-        ]
-        ),
-        
-        # Specify directory,
-        html.H4("Please specify the base directory"),
-        html.Div([
-            dbc.Input(id="input-on-submit", placeholder=base_path, value=base_path, type="text"),
-            html.Br(),
-        ]),
-        
-        # upload a new dataset out of default directory
-        html.H4("Upload a new dataset"),
-        dcc.Upload(
-            id="upload-data",
-            children=html.Div(
-                ["Drag and drop or click to select a file to upload."]
-            ),
-            style={
-                "width": "60%",
-                "height": "40px",
-                "lineHeight": "40px",
-                "borderWidth": "1px",
-                "borderStyle": "dashed",
-                "borderRadius": "5px",
-                "textAlign": "center",
-                "margin": "10px",
-            },
-            max_size=-1,
-            multiple=True,
-        ),
-        
-        # File list
-        html.Div([
-            html.H4("File List"),
-            html.Ul(id="file-list")
-        ], style={'font-size': '12px',}
-        ),
-        
-        # Uploading all files
-        html.H4("Process dataset"),
-        html.Div(
-            [
-                dbc.Button("Start/Stop processing", id="submit-data", n_clicks=0),
-                dbc.Spinner(html.Div(id="submiting-data")),
-            ]
-        ),
-        
-        # Create Div to place a invisible element inside
-        html.Div([
-            dcc.Input(id='upload-status', value = 'stop'),
-            dcc.Input(id = 'csvreader-status',value = -1),
-            dcc.Input(id='combinecsv-status', value = 'wait'),
-        ], style={'display': 'none'}
-        ),
-
-        # status indicators
-        html.Div([        
-            daq.Indicator(id='start-indicator',label="Files Uploaded",value=True,color='grey'),
-        ], style={'width': '30%', 'display': 'inline-block'}
-        ),
-        html.Div([
-            daq.Indicator(id='xlsx2csv-indicator',label="Parsing Files",value=True,color='grey'),
-        ], style={'width': '30%', 'display': 'inline-block'}
-        ),
-        html.Div([        
-            daq.Indicator(id='csvcombine-indicator',label="Combining Data",value=True,color='grey'),
-        ], style={'width': '30%', 'display': 'inline-block'}
-        ),
-
-         
-        # dcc.Interval(id="progress-interval", n_intervals=0, interval=500),
-        dbc.Progress(id="progress"),       
-        html.Div(id='parsing status', children='wait for input data'),  # add a section to store and display output
-        html.Br(),
-
-        # training
-        html.H4("Train dataset"),
-        html.Div(
-            [
-                dbc.Button("Start/stop training", id="submit-training", n_clicks=0),
-                dbc.Spinner(html.Div(id="submiting-training")),
-            ]
-        ),
-        daq.Indicator(id='train-indicator',label="Training Done",value=True,color='grey'),
-        html.Br(),
-
-        # prediction
-        html.H4("Predict new batch"),
-        html.Div(
-            [
-                dbc.Button("Start/stop prediction", id="submit-predict", n_clicks=0),
-                dbc.Spinner(html.Div(id="submiting-predict")),
-            ]
-        ),
-        daq.Indicator(id='predict-indicator',label="Prediction Done",value=True,color='grey'),
-        html.Br(),
-
-    ],style={'marginLeft': 10, 'marginRight': 10, 'marginTop': 10, 'marginBottom': 10, 
-               # 'backgroundColor':'#F7FBFE', 'border': 'thin lightgrey dashed', 
-               "max-width": "1000px", 'padding': '6px 0px 0px 8px'},
-)
+app.layout = html.Div([
+    dcc.Location(id = 'url', refresh = False),
+    html.Div(id = 'page-content')
+])
 
 
-# @dcb.callback(Output("div", "children"), [Input("btn1", "n_clicks")])
-# def click_btn1(n_clicks):
-#     return "You clicked btn1"
-
-
-# @dcb.callback(Output("div", "children"), [Input("btn2", "n_clicks")]) 
-# def click_btn2(n_clicks):
-#     return "You clicked btn2"
-
+@app.callback(Output('page-content', 'children'),
+            [Input('url', 'pathname')])
+def display_page(pathname):
+    if pathname == '/training':
+        return Training()
+    elif pathname == '/eda':
+        return EDA()
+    else:
+        return Homepage()
+    
 
 @app.callback(
     Output("file-list", "children"),
@@ -298,7 +196,7 @@ def csvcombine_indicator(status):
 @app.callback(
     [Output("progress", "value"), Output("progress", "children")],
     [Input('start-indicator', 'color'),
-     Input('xlsx2csv-indicator', 'color'), Input('csvcombine-indicator', 'color')],
+      Input('xlsx2csv-indicator', 'color'), Input('csvcombine-indicator', 'color')],
 )
 def data_progress(start_color, xlsx2csv_indicator, csvcombine_indicator):
     # check progress of some background process, in this example we'll just
@@ -315,7 +213,6 @@ def data_progress(start_color, xlsx2csv_indicator, csvcombine_indicator):
     # only add text after 5% progress to ensure text isn't squashed too much
     return progress, f"{progress} %" if progress >= 5 else "" 
 
-       
 def save_file(filename, content):
     content_type, content_string = content.split(',')
 
@@ -440,11 +337,11 @@ def csvCombine(in_dir, temp_dir, header_dir, outputfile, headerfile):
         if os.path.exists(csvfile):
             headers_temp = headers_df[csvfilenames]
             df = pd.read_csv(csvfile, usecols=headers_temp.dropna(),
-                     dtype='str', 
-                     parse_dates=[headers_temp['CASE_SUBMITTED']]).dropna(how='all')
+                      dtype='str', 
+                      parse_dates=[headers_temp['CASE_SUBMITTED']]).dropna(how='all')
             # filter rows, Remove "Withdraw" and "Certified Expired"
             df = df[((df['CASE_STATUS'].str.upper() == 'CERTIFIED') | \
-                     (df['CASE_STATUS'].str.upper() == 'DENIED')) & \
+                      (df['CASE_STATUS'].str.upper() == 'DENIED')) & \
                     (df['VISA_CLASS'].str.upper() == 'H-1B')]  
                
             # Similarly, most of employer come from the U.S.. We only keep application with American employer
@@ -469,11 +366,11 @@ def csvCombine(in_dir, temp_dir, header_dir, outputfile, headerfile):
     # mapping value based on mapping file    
     df['PW_WAGE_LEVEL'] = df['PW_WAGE_LEVEL'].replace(constants.PW_WAGE_LEVEL_MAP)
     df = df.replace({'PW_WAGE_LEVEL': constants.PW_WAGE_LEVEL_MAP, 
-                       'EMPLOYER_STATE': constants.US_STATE_ABBREV,
-                       'WORKSITE_STATE': constants.US_STATE_ABBREV,
-                       "PREVAILING_WAGE": {'NAN': -1},
-                       "PW_UNIT_OF_PAY": {'NAN': 'UNKNOWN'},
-                       })
+                        'EMPLOYER_STATE': constants.US_STATE_ABBREV,
+                        'WORKSITE_STATE': constants.US_STATE_ABBREV,
+                        "PREVAILING_WAGE": {'NAN': -1},
+                        "PW_UNIT_OF_PAY": {'NAN': 'UNKNOWN'},
+                        })
     df["PREVAILING_WAGE"] = pd.to_numeric(df["PREVAILING_WAGE"], downcast="float")
     df = df.replace({'NAN': 'UNKOWN'})
 
@@ -504,9 +401,15 @@ def levelClassifier(job_title):
         return 'OTHER'
     
     
-dcb.register(app)  
+# @app.callback(
+#     Output('output', 'children'),
+#     [Input('pop_dropdown', 'value')]
+# )
+# def update_graph(city):
+#     graph = build_graph(city)
+#     return graph
 
-
-if __name__ == "__main__":
-
-    app.run_server(debug=True, port=8888)
+if __name__ == '__main__':
+    app.run_server(debug=True)
+    
+    
