@@ -31,6 +31,9 @@ from eda import EDA
 
 
 import pandas as pd
+import pickle
+
+
 
 # BASE_DIR = "/Users/xuel12/Documents/MSdatascience/DS5500datavis/project2/"
 # CODE_DIR = BASE_DIR+"h1permprediction/"
@@ -173,7 +176,9 @@ def update_combinedata(count_newcsv, value):  # define the function reaching out
         # read in csv to dataframe
         if count_newcsv > 0 or not os.path.exists(temp_dir + outputfile):
             csvCombine(input_dir, temp_dir, header_dir, outputfile, headerfile)
-            
+        
+        makeEDAreports(outputfile, temp_dir)
+
         finish_message = 'Data parsing complete, find the parsed combineCSV in directory'
         # return progress, f"{progress} %" if progress >= 5 else ""
         return finish_message, 'done'
@@ -382,6 +387,7 @@ def csvCombine(in_dir, temp_dir, header_dir, outputfile, headerfile):
     df.to_csv(temp_dir+outputfile, index=False)
 
     print('There are {} records.'.format(df.shape[0]))
+    
     # return df
 
 
@@ -400,7 +406,16 @@ def levelClassifier(job_title):
     else:
         return 'OTHER'
     
-    
+def makeEDAreports(csvfile, temp_dir):
+    df = pd.read_csv(temp_dir + csvfile)
+
+    edaplot = {}
+    edaplot['EMPLOYER_STATE'] = df.groupby('EMPLOYER_STATE').count()
+
+    pickle_out = open(temp_dir+"eda.pickle","wb")
+    pickle.dump(edaplot, pickle_out)
+    pickle_out.close()
+
 # @app.callback(
 #     Output('output', 'children'),
 #     [Input('pop_dropdown', 'value')]

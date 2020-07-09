@@ -128,14 +128,14 @@ SOC_MAP = {
         '71': 'ENGINEERING EXCEPT COMPUTERS' }
 
 PW_WAGE_LEVEL_MAP = {
-        '1': 'Level I',
-        '2': 'Level II',
-        '3': 'Level III',
-        '4': 'Level IV',
-        'I': 'Level I',
-        'II': 'Level II',
-        'III': 'Level III',
-        'IV': 'Level IV'}
+        '1': 'LEVEL I',
+        '2': 'LEVEL II',
+        '3': 'LEVEL III',
+        '4': 'LEVEL IV',
+        'I': 'LEVEL I',
+        'II': 'LEVEL II',
+        'III': 'LEVEL III',
+        'IV': 'LEVEL IV'}
 
 US_STATE_ABBREV = {
     'ALABAMA': 'AL',

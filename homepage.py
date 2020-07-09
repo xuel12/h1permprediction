@@ -81,22 +81,64 @@ body = dbc.Container(
     className="mt-4",
 )
 
-dropdown_EMPLOYER_STATE = dbc.Container([
-    dcc.Dropdown(id = 'EMPLOYER_COUNTRY_dropdown', options = options['EMPLOYER_COUNTRY'], 
-                 placeholder="Select employer country"),
-    dcc.Dropdown(id = 'EMPLOYER_STATE_dropdown', options = options['EMPLOYER_STATE'], 
-                 placeholder="Select employer state"),
-    dcc.Dropdown(id = 'WORKSITE_STATE_dropdown', options = options['WORKSITE_STATE'], 
-                 placeholder="Select worksite state"),
-    dcc.Dropdown(id = 'JOB_CATEGORY_dropdown', options = options['JOB_CATEGORY'], 
-                 placeholder="Select job category"),
-])
+dropdown = dbc.Container([
+    
+    dbc.Row(
+            [dbc.Col([
+                html.Div("Select employer country"),
+                dcc.Dropdown(id = 'EMPLOYER_COUNTRY_dropdown', options = options['EMPLOYER_COUNTRY'], 
+                             placeholder="Select employer country")
+                ]),
+            dbc.Col([
+                html.Div("Select employer state"),
+                dcc.Dropdown(id = 'EMPLOYER_STATE_dropdown', options = options['EMPLOYER_STATE'], 
+                             placeholder="Select employer state")
+                ]),
+            dbc.Col([
+                html.Div("Select worksite state"),
+                dcc.Dropdown(id = 'WORKSITE_STATE_dropdown', options = options['WORKSITE_STATE'], 
+                             placeholder="Select worksite state"),
+                ]),
+            dbc.Col([
+                html.Div("Select job category"),
+                dcc.Dropdown(id = 'JOB_CATEGORY_dropdown', options = options['JOB_CATEGORY'], 
+                             placeholder="Select job category"),
+                ]),
+            ]
+        ),
+    html.Br(),
+    dbc.Row(
+            [dbc.Col([
+                html.Div("Job level"),
+                dcc.Dropdown(id = 'JOB_LEVEL_dropdown', options = options['JOB_LEVEL'], 
+                             placeholder="Select job level")
+                ]),
+            dbc.Col([
+                html.Div("Full-time position?"),
+                dcc.Dropdown(id = 'EMPLOYER_STATE_dropdown', options = options['FULL_TIME_POSITION'], 
+                             placeholder="Select full-time position or not")
+                ]),
+            dbc.Col([
+                html.Div("Wage level"),
+                dcc.Dropdown(id = 'PW_WAGE_LEVEL_dropdown', options = options['PW_WAGE_LEVEL'], 
+                             placeholder="Select wage level"),
+                ]),
+            dbc.Col([
+                html.Div("Is there H-1B_DEPENDENT?"),
+                dcc.Dropdown(id = 'H-1B_DEPENDENT_dropdown', options = options['H-1B_DEPENDENT'], 
+                             placeholder="Select h1b dependent"),
+                ]),
+            ]
+        ),
+    ],
+    # style=dict(display='flex')
+)
 
 def Homepage():
     layout = html.Div([
         nav,
 	    body,
-        dropdown_EMPLOYER_STATE
+        dropdown,
     ])
     return layout
 
