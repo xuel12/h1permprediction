@@ -45,7 +45,31 @@ edaplot = pickle.load(pickle_in)
 # fig = px.pie(edaplot['EMPLOYER_STATE'], values='CASE_STATUS', names='CASE_STATUS', title='Population of European continent')
 
 fig_employter_state = go.Figure(data=[go.Pie(labels=edaplot['EMPLOYER_STATE'].index, 
-                             values=edaplot['EMPLOYER_STATE']['CASE_STATUS'])])
+                                             values=edaplot['EMPLOYER_STATE']['CASE_STATUS'])],
+                                # layout = {'title':'EMPLOYER_STATE'}
+                                )
+fig_worksite_state = go.Figure(data=[go.Pie(labels=edaplot['WORKSITE_STATE'].index, 
+                             values=edaplot['WORKSITE_STATE']['CASE_STATUS'])])
+fig_job_category = go.Figure(data=[go.Bar(x=edaplot['JOB_CATEGORY'].index,
+                                             y=edaplot['JOB_CATEGORY']['CASE_STATUS'])])
+fig_job_level = go.Figure(data=[go.Bar(x=edaplot['JOB_LEVEL'].index,
+                                       y=edaplot['JOB_LEVEL']['CASE_STATUS'])])
+fig_fulltime = go.Figure(data=[go.Bar(x=edaplot['FULL_TIME_POSITION'].index,
+                                             y=edaplot['FULL_TIME_POSITION']['CASE_STATUS'])])
+fig_wage_level = go.Figure(data=[go.Bar(x=edaplot['PW_WAGE_LEVEL'].index,
+                                       y=edaplot['PW_WAGE_LEVEL']['CASE_STATUS'])])
+fig_h1b_dependent = go.Figure(data=[go.Bar(x=edaplot['H-1B_DEPENDENT'].index,
+                                             y=edaplot['H-1B_DEPENDENT']['CASE_STATUS'])])
+fig_willful_violator = go.Figure(data=[go.Bar(x=edaplot['WILLFUL_VIOLATOR'].index,
+                                       y=edaplot['WILLFUL_VIOLATOR']['CASE_STATUS'])])
+
+fig_submit_date = go.Figure(data=[go.Scatter(
+    x=edaplot['CASE_SUBMITTED'].index,
+    y=edaplot['CASE_SUBMITTED']['DENIED']/(edaplot['CASE_SUBMITTED']['CERTIFIED']+edaplot['CASE_SUBMITTED']['DENIED']),
+    mode='lines+markers')]
+    )
+fig_submit_date.update_xaxes(tickangle=-90, tickfont=dict(size=12))
+fig_submit_date.update_layout(xaxis_title='Month',yaxis_title='DENIED Rate')
 
 
 body = dbc.Container(
@@ -55,14 +79,22 @@ body = dbc.Container(
               ),
         # dbc.Button("View details", color="secondary"),
         
+        html.H3("Denied Rate vs CASE_SUBMITTED"),
+        dbc.Row(
+        [
+            dcc.Graph(
+                        id='submit_date',
+                        figure = fig_submit_date,
+                    ),
+            ]
+        ),
+        
+        html.Br(),
         dbc.Row(
         [
             dbc.Col(
                     [
-                        html.H2("EMPLOYER_STATE"),
-                        # dcc.Graph(
-                        #     figure={"data": [{"x": [1, 2, 3], "y": [1, 4, 9]}]}
-                        #        ),
+                        html.H4("EMPLOYER_STATE"),
                         dcc.Graph(
                             id='employer_state',
                             figure = fig_employter_state,
@@ -71,13 +103,82 @@ body = dbc.Container(
                 ),
             dbc.Col(
                     [
-                        html.H2("EMPLOYER_STATE"),
-                        # dcc.Graph(
-                        #     figure={"data": [{"x": [1, 2, 3], "y": [1, 4, 9]}]}
-                        #        ),
+                        html.H4("WORKSITE_STATE"),
                         dcc.Graph(
-                            id='employer_state',
-                            figure = fig_employter_state,
+                            id='worksite_state',
+                            figure = fig_worksite_state,
+                        ),
+                    ]
+                ),
+        ]
+        ),
+        
+        html.Br(),
+        dbc.Row(
+        [
+            dbc.Col(
+                    [
+                        html.H4("JOB_CATEGORY"),
+                        dcc.Graph(
+                            id='job_category',
+                            figure = fig_job_category,
+                        ),
+                    ]
+                ),
+            dbc.Col(
+                    [
+                        html.H4("JOB_LEVEL"),
+                        dcc.Graph(
+                            id='job_level',
+                            figure = fig_job_level,
+                        ),
+                    ]
+                ),
+        ]
+        ),
+        
+        html.Br(),
+        dbc.Row(
+        [
+            dbc.Col(
+                    [
+                        html.H4("FULL_TIME_POSITION"),
+                        dcc.Graph(
+                            id='fulltime_position',
+                            figure = fig_fulltime,
+                        ),
+                    ]
+                ),
+            dbc.Col(
+                    [
+                        html.H4("PW_WAGE_LEVEL"),
+                        dcc.Graph(
+                            id='wage_level',
+                            figure = fig_wage_level,
+                        ),
+                    ]
+                ),
+        ]
+        ),
+
+        html.Br(),
+        dbc.Row(
+        [
+            dbc.Col(
+                    [
+                        html.H3("H-1B_DEPENDENT"),
+                        dcc.Graph(
+                            id='h1b_dependent',
+                            figure = fig_h1b_dependent,
+                        ),
+                    ]
+                ),
+            dbc.Col(
+                    [
+                        html.H3("WILLFUL_VIOLATOR"),
+                        dcc.Graph(
+                            id='willful_violator',
+                            figure = fig_willful_violator,
                         ),
                     ]
                 ),

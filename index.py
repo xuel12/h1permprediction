@@ -35,9 +35,9 @@ import pickle
 
 
 
-# BASE_DIR = "/Users/xuel12/Documents/MSdatascience/DS5500datavis/project2/"
-# CODE_DIR = BASE_DIR+"h1permprediction/"
-# os.chdir(CODE_DIR)
+BASE_DIR = "/Users/xuel12/Documents/MSdatascience/DS5500datavis/project2/"
+CODE_DIR = BASE_DIR+"h1permprediction/"
+os.chdir(CODE_DIR)
 
 import constants
 
@@ -407,11 +407,22 @@ def levelClassifier(job_title):
         return 'OTHER'
     
 def makeEDAreports(csvfile, temp_dir):
-    df = pd.read_csv(temp_dir + csvfile)
+    csvfile = 'h1b2015to2020_sub.csv'
+    df = pd.read_csv(temp_dir + csvfile, parse_dates=['CASE_SUBMITTED'])
 
     edaplot = {}
     edaplot['EMPLOYER_STATE'] = df.groupby('EMPLOYER_STATE').count()
-
+    edaplot['WORKSITE_STATE'] = df.groupby('WORKSITE_STATE').count()
+    edaplot['JOB_CATEGORY'] = df.groupby('JOB_CATEGORY').count()
+    edaplot['JOB_LEVEL'] = df.groupby('JOB_LEVEL').count()
+    edaplot['FULL_TIME_POSITION'] = df.groupby('FULL_TIME_POSITION').count()
+    edaplot['PW_WAGE_LEVEL'] = df.groupby('PW_WAGE_LEVEL').count()
+    edaplot['H-1B_DEPENDENT'] = df.groupby('H-1B_DEPENDENT').count()
+    edaplot['WILLFUL_VIOLATOR'] = df.groupby('WILLFUL_VIOLATOR').count()
+    edaplot['CASE_SUBMITTED'] = (df.groupby(['CASE_STATUS', pd.Grouper(key='CASE_SUBMITTED', freq='M')])['JOB_CATEGORY']
+        .count().reset_index().pivot(index='CASE_SUBMITTED', columns='CASE_STATUS', values='JOB_CATEGORY'))
+    
+               
     pickle_out = open(temp_dir+"eda.pickle","wb")
     pickle.dump(edaplot, pickle_out)
     pickle_out.close()
