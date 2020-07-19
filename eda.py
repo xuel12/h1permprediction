@@ -41,6 +41,7 @@ pickle_in = open(temp_dir + "eda.pickle","rb")
 #     os.makedirs(input_dir)
 edaplot = pickle.load(pickle_in)
 
+
 # fig = px.scatter(df, x="x", y="y", color="fruit", custom_data=["customdata"])
 # fig = px.pie(edaplot['EMPLOYER_STATE'], values='CASE_STATUS', names='CASE_STATUS', title='Population of European continent')
 
@@ -50,16 +51,29 @@ fig_employter_state = go.Figure(data=[go.Pie(labels=edaplot['EMPLOYER_STATE'].in
                                 )
 fig_worksite_state = go.Figure(data=[go.Pie(labels=edaplot['WORKSITE_STATE'].index, 
                              values=edaplot['WORKSITE_STATE']['CASE_STATUS'])])
+
 fig_job_category = go.Figure(data=[go.Bar(x=edaplot['JOB_CATEGORY'].index,
                                              y=edaplot['JOB_CATEGORY']['CASE_STATUS'])])
-fig_job_level = go.Figure(data=[go.Bar(x=edaplot['JOB_LEVEL'].index,
-                                       y=edaplot['JOB_LEVEL']['CASE_STATUS'])])
+
+t1_job = go.Bar(x=edaplot['JOB_LEVEL'][edaplot['JOB_LEVEL'].CASE_STATUS == 'CERTIFIED'].sort_values('countvar',ascending= False)['JOB_LEVEL'].values,y=edaplot['JOB_LEVEL'][edaplot['JOB_LEVEL'].CASE_STATUS == 'CERTIFIED'].sort_values('countvar',ascending= False)['countvar'].values,name='CERTIFIED')
+t2_job = go.Bar(x=edaplot['JOB_LEVEL'][edaplot['JOB_LEVEL'].CASE_STATUS == 'DENIED'].sort_values('countvar',ascending= False)['JOB_LEVEL'].values,y=edaplot['JOB_LEVEL'][edaplot['JOB_LEVEL'].CASE_STATUS == 'DENIED'].sort_values('countvar',ascending= False)['countvar'].values,name='DENIED')
+fig_job_level = go.Figure(data=[t1_job,t2_job])
+fig_job_level.update_layout(barmode='stack')
+
 fig_fulltime = go.Figure(data=[go.Bar(x=edaplot['FULL_TIME_POSITION'].index,
                                              y=edaplot['FULL_TIME_POSITION']['CASE_STATUS'])])
-fig_wage_level = go.Figure(data=[go.Bar(x=edaplot['PW_WAGE_LEVEL'].index,
-                                       y=edaplot['PW_WAGE_LEVEL']['CASE_STATUS'])])
-fig_h1b_dependent = go.Figure(data=[go.Bar(x=edaplot['H-1B_DEPENDENT'].index,
-                                             y=edaplot['H-1B_DEPENDENT']['CASE_STATUS'])])
+
+t1_wage = go.Bar(x=edaplot['PW_WAGE_LEVEL'][edaplot['PW_WAGE_LEVEL'].CASE_STATUS == 'CERTIFIED'].sort_values('countvar',ascending= False)['PW_WAGE_LEVEL'].values,y=edaplot['PW_WAGE_LEVEL'][edaplot['PW_WAGE_LEVEL'].CASE_STATUS == 'CERTIFIED'].sort_values('countvar',ascending= False)['countvar'].values,name='CERTIFIED')
+t2_wage = go.Bar(x=edaplot['PW_WAGE_LEVEL'][edaplot['PW_WAGE_LEVEL'].CASE_STATUS == 'DENIED'].sort_values('countvar',ascending= False)['PW_WAGE_LEVEL'].values,y=edaplot['PW_WAGE_LEVEL'][edaplot['PW_WAGE_LEVEL'].CASE_STATUS == 'DENIED'].sort_values('countvar',ascending= False)['countvar'].values,name='DENIED')
+fig_wage_level = go.Figure(data=[t1_wage,t2_wage])
+fig_wage_level.update_layout(barmode='stack')
+
+t1_dep = go.Bar(x=edaplot['H-1B_DEPENDENT'][edaplot['H-1B_DEPENDENT'].CASE_STATUS == 'CERTIFIED'].sort_values('countvar',ascending= False)['H-1B_DEPENDENT'].values,y=edaplot['H-1B_DEPENDENT'][edaplot['H-1B_DEPENDENT'].CASE_STATUS == 'CERTIFIED'].sort_values('countvar',ascending= False)['countvar'].values,name='CERTIFIED')
+t2_dep = go.Bar(x=edaplot['H-1B_DEPENDENT'][edaplot['H-1B_DEPENDENT'].CASE_STATUS == 'DENIED'].sort_values('countvar',ascending= False)['H-1B_DEPENDENT'].values,y=edaplot['H-1B_DEPENDENT'][edaplot['H-1B_DEPENDENT'].CASE_STATUS == 'DENIED'].sort_values('countvar',ascending= False)['countvar'].values,name='DENIED')
+fig_h1b_dependent = go.Figure(data=[t1_dep,t2_dep])
+fig_h1b_dependent.update_layout(barmode='stack')
+
+
 fig_willful_violator = go.Figure(data=[go.Bar(x=edaplot['WILLFUL_VIOLATOR'].index,
                                        y=edaplot['WILLFUL_VIOLATOR']['CASE_STATUS'])])
 
@@ -75,11 +89,11 @@ fig_submit_date.update_layout(xaxis_title='Month',yaxis_title='DENIED Rate')
 body = dbc.Container(
     [
         html.P(
-            """ This page is to showing the H1B and PERM summary from year 2015 to 2019."""
+            """ This page is to showing the H1B summary from year 2015 to 2019."""
               ),
         # dbc.Button("View details", color="secondary"),
         
-        html.H3("Denied Rate vs CASE_SUBMITTED"),
+        html.H3("Denied Rate OVER 5 YEARS"),
         dbc.Row(
         [
             dcc.Graph(
@@ -188,10 +202,11 @@ body = dbc.Container(
     className="mt-4",
 )
 
+
 def EDA():
     layout = html.Div([
         nav,
-	    body
+	    body,
     ])
     return layout
 

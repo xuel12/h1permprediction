@@ -27,15 +27,18 @@ from dash_extensions.callback import DashCallbackBlueprint
 # from app import App, build_graph
 from homepage import Homepage
 from train import Training
+from train_perm import Training_perm
 from eda import EDA
+from eda_perm import EDA_perm
 
+from constants import job_level_map,US_STATE_ABBREV
 
 import pandas as pd
 import pickle
 
 
-
 BASE_DIR = "/Users/xuel12/Documents/MSdatascience/DS5500datavis/project2/"
+# BASE_DIR = "/Users/42152/Desktop/"
 CODE_DIR = BASE_DIR+"h1permprediction/"
 os.chdir(CODE_DIR)
 
@@ -89,8 +92,12 @@ app.layout = html.Div([
 def display_page(pathname):
     if pathname == '/training':
         return Training()
+    elif pathname == '/training_perm':
+        return Training_perm()
     elif pathname == '/eda':
         return EDA()
+    elif pathname == '/eda_perm':
+        return EDA_perm()
     else:
         return Homepage()
     
@@ -409,15 +416,19 @@ def levelClassifier(job_title):
 def makeEDAreports(csvfile, temp_dir):
     csvfile = 'h1b2015to2020_sub.csv'
     df = pd.read_csv(temp_dir + csvfile, parse_dates=['CASE_SUBMITTED'])
+    df["PW_WAGE_LEVEL"] = df["PW_WAGE_LEVEL"].map(job_level_map)
+    df = df.replace('UNKOWN','UNKNOWN')
+    df['countvar'] = 1
+
 
     edaplot = {}
     edaplot['EMPLOYER_STATE'] = df.groupby('EMPLOYER_STATE').count()
     edaplot['WORKSITE_STATE'] = df.groupby('WORKSITE_STATE').count()
-    edaplot['JOB_CATEGORY'] = df.groupby('JOB_CATEGORY').count()
-    edaplot['JOB_LEVEL'] = df.groupby('JOB_LEVEL').count()
+    edaplot['JOB_CATEGORY'] = df.groupby('JOB_CATEGORY').count().sort_values(['countvar'], ascending=False)[0:10]
+    edaplot['JOB_LEVEL'] = df.groupby(['JOB_LEVEL','CASE_STATUS'],as_index=False).count()
     edaplot['FULL_TIME_POSITION'] = df.groupby('FULL_TIME_POSITION').count()
-    edaplot['PW_WAGE_LEVEL'] = df.groupby('PW_WAGE_LEVEL').count()
-    edaplot['H-1B_DEPENDENT'] = df.groupby('H-1B_DEPENDENT').count()
+    edaplot['PW_WAGE_LEVEL'] = df.groupby(['PW_WAGE_LEVEL','CASE_STATUS'],as_index=False).count()
+    edaplot['H-1B_DEPENDENT'] = df.groupby(['H-1B_DEPENDENT','CASE_STATUS'],as_index=False).count()
     edaplot['WILLFUL_VIOLATOR'] = df.groupby('WILLFUL_VIOLATOR').count()
     edaplot['CASE_SUBMITTED'] = (df.groupby(['CASE_STATUS', pd.Grouper(key='CASE_SUBMITTED', freq='M')])['JOB_CATEGORY']
         .count().reset_index().pivot(index='CASE_SUBMITTED', columns='CASE_STATUS', values='JOB_CATEGORY'))
@@ -426,6 +437,41 @@ def makeEDAreports(csvfile, temp_dir):
     pickle_out = open(temp_dir+"eda.pickle","wb")
     pickle.dump(edaplot, pickle_out)
     pickle_out.close()
+
+
+def makeEDAreportsPERM(csvfile, temp_dir):
+    csvfile = 'perm2015to2019_sub.csv'
+    perm = pd.read_csv(temp_dir + csvfile, engine='python')
+    perm = perm.fillna("Unknown")
+    perm["JOB_INFO_WORK_STATE"] = perm["JOB_INFO_WORK_STATE"].map(US_STATE_ABBREV)
+    perm["EMPLOYER_STATE"] = perm["EMPLOYER_STATE"].map(US_STATE_ABBREV)
+    perm['countvar'] = 1
+    perm = perm.replace('Certified', 'CERTIFIED')
+    perm = perm.replace('Denied', 'DENIED')
+
+    edaplot = {}
+    edaplot['CASE_STATUS'] = perm.groupby('CASE_STATUS').count()
+    edaplot['EMPLOYER_STATE'] = perm.groupby('EMPLOYER_STATE').count()
+    edaplot['WORKSITE_STATE'] = perm.groupby('JOB_INFO_WORK_STATE').count()
+    edaplot['PW_WAGE_LEVEL'] = perm.groupby(['PW_LEVEL_9089','CASE_STATUS'],as_index=False).count()
+    edaplot['REFILE'] = perm.groupby(['REFILE','CASE_STATUS'],as_index=False).count()
+    edaplot['EDUCATION'] = perm.groupby(['FOREIGN_WORKER_INFO_EDUCATION', 'CASE_STATUS'], as_index=False).count()
+    edaplot['JOB_INFO_ALT_FIELD'] = perm.groupby(['JOB_INFO_ALT_FIELD', 'CASE_STATUS'], as_index=False).count()
+    dftop = perm.groupby('FW_INFO_BIRTH_COUNTRY', as_index=False).count()
+    dftop = dftop.sort_values('countvar', ascending=False)[['FW_INFO_BIRTH_COUNTRY', 'countvar']][0:6]
+    edaplot['FW_INFO_BIRTH_COUNTRY'] = perm.groupby(['FW_INFO_BIRTH_COUNTRY', 'CASE_STATUS'], as_index=False).count()
+    edaplot['FW_INFO_BIRTH_COUNTRY'] = edaplot['FW_INFO_BIRTH_COUNTRY'][edaplot['FW_INFO_BIRTH_COUNTRY'].FW_INFO_BIRTH_COUNTRY.isin(dftop.FW_INFO_BIRTH_COUNTRY)]
+    dftop2 = perm.groupby('CLASS_OF_ADMISSION', as_index=False).count()
+    dftop2 = dftop2.sort_values('countvar', ascending=False)[['CLASS_OF_ADMISSION', 'countvar']][0:6]
+    edaplot['CLASS_OF_ADMISSION'] = perm.groupby(['CLASS_OF_ADMISSION', 'CASE_STATUS'], as_index=False).count()
+    edaplot['CLASS_OF_ADMISSION'] = edaplot['CLASS_OF_ADMISSION'][edaplot['CLASS_OF_ADMISSION'].CLASS_OF_ADMISSION.isin(dftop2.CLASS_OF_ADMISSION)]
+    edaplot['FW_INFO_TRAINING_COMP'] = perm.groupby(['FW_INFO_TRAINING_COMP', 'CASE_STATUS'], as_index=False).count()
+    edaplot['JOB_INFO_JOB_REQ_NORMAL'] = perm.groupby(['JOB_INFO_JOB_REQ_NORMAL', 'CASE_STATUS'], as_index=False).count()
+
+    pickle_out = open(temp_dir + "edaPERM.pickle", "wb")
+    pickle.dump(edaplot, pickle_out)
+    pickle_out.close()
+
 
 # @app.callback(
 #     Output('output', 'children'),

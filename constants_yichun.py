@@ -1,4 +1,4 @@
-BASE_PATH = "/Users/xuel12/Documents/MSdatascience/DS5500datavis/project2/"
+BASE_PATH = "C:/Users/42152/Desktop/"
 CODE_DIR = BASE_PATH + "h1permprediction/"
 INPUT_DIR = BASE_PATH + "input/"
 TEMP_DIR = BASE_PATH + "temp/"
@@ -7,14 +7,6 @@ OUTPUT_DIR = BASE_PATH + "output/"
 PREDICT_DIR = BASE_PATH + "predict/"
 DOWNLOAD_DIR = BASE_PATH + "download/"
 HEADER_DIR = BASE_PATH + "header/"
-
-INPUT_DIR_PERM = BASE_PATH + "input_perm/"
-TEMP_DIR_PERM = BASE_PATH + "temp_perm/"
-MODEL_DIR_PERM = BASE_PATH + "model_perm/"
-OUTPUT_DIR_PERM = BASE_PATH + "output_perm/"
-PREDICT_DIR_PERM = BASE_PATH + "predict_perm/"
-DOWNLOAD_DIR_PERM = BASE_PATH + "download_perm/"
-HEADER_DIR_PERM = BASE_PATH + "header_perm/"
 
 HEADERS = [
                 'CASE_NUMBER',
