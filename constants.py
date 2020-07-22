@@ -1,6 +1,7 @@
 BASE_PATH = "/Users/xuel12/Documents/MSdatascience/DS5500datavis/project2/"
 CODE_DIR = BASE_PATH + "h1permprediction/"
-INPUT_DIR = BASE_PATH + "input/"
+INPUT_DIR = BASE_PATH + "input_h1b/"
+INPUT_DIR_PERM = BASE_PATH + "input_perm/"
 TEMP_DIR = BASE_PATH + "temp/"
 MODEL_DIR = BASE_PATH + "model/"
 OUTPUT_DIR = BASE_PATH + "output/"
@@ -8,13 +9,6 @@ PREDICT_DIR = BASE_PATH + "predict/"
 DOWNLOAD_DIR = BASE_PATH + "download/"
 HEADER_DIR = BASE_PATH + "header/"
 
-INPUT_DIR_PERM = BASE_PATH + "input_perm/"
-TEMP_DIR_PERM = BASE_PATH + "temp_perm/"
-MODEL_DIR_PERM = BASE_PATH + "model_perm/"
-OUTPUT_DIR_PERM = BASE_PATH + "output_perm/"
-PREDICT_DIR_PERM = BASE_PATH + "predict_perm/"
-DOWNLOAD_DIR_PERM = BASE_PATH + "download_perm/"
-HEADER_DIR_PERM = BASE_PATH + "header_perm/"
 
 HEADERS = [
                 'CASE_NUMBER',
@@ -259,7 +253,7 @@ US_STATE_ABBREV = {
     'WI': 'WI',
     'WY': 'WY'}
 
-job_level_map = {
+JOB_LEVEL_MAP = {
     'UNKOWN':'UNKNOWN',
     'Level I': 'LEVEL I',
     'Level II': 'LEVEL II',
@@ -272,7 +266,7 @@ job_level_map = {
 
 }
 
-unit_map={
+UNIT_MAP = {
     'Year':'YEAR',
     'Bi-Weekly':'BI-WEEKLY',
     'Hour':'HOUR',

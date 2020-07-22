@@ -21,8 +21,8 @@ nav = Navbar()
 upload = dbc.Container([
         html.Div([
             # Specify directory,
-            html.H4("Please specify the base directory"),
-            dbc.Input(id="input-on-submit", placeholder=base_path, value=base_path, type="text"),
+            html.H4("Please specify the base directory for PERM"),
+            dbc.Input(id="input-on-submit-perm", placeholder=base_path, value=base_path, type="text"),
             html.Br(),
         ]),
         
@@ -30,7 +30,7 @@ upload = dbc.Container([
         # upload a new dataset out of default directory
         html.H4("Upload a new dataset"),
         dcc.Upload(
-            id="upload-data",
+            id="upload-data-perm",
             children=html.Div(
                 ["Drag and drop or click to select a file to upload."]
             ),
@@ -51,7 +51,7 @@ upload = dbc.Container([
         # File list
         html.Div([
             html.H4("File List"),
-            html.Ul(id="file-list")
+            html.Ul(id="file-list-perm")
         ], style={'font-size': '12px',}
         ),
     ]),
@@ -64,37 +64,37 @@ body = dbc.Container(
         html.H4("Process dataset"),
         html.Div(
             [
-                dbc.Button("Start/Stop processing", id="submit-data", n_clicks=0),
-                dbc.Spinner(html.Div(id="submiting-data")),
+                dbc.Button("Start/Stop processing", id="submit-data-perm", n_clicks=0),
+                dbc.Spinner(html.Div(id="submiting-data-perm")),
             ]
         ),
         
         # Create Div to place a invisible element inside
         html.Div([
-            dcc.Input(id='upload-status', value = 'stop'),
-            dcc.Input(id = 'csvreader-status',value = -1),
-            dcc.Input(id='combinecsv-status', value = 'wait'),
+            dcc.Input(id='upload-status-perm', value = 'stop'),
+            dcc.Input(id = 'csvreader-status-perm',value = -1),
+            dcc.Input(id='combinecsv-status-perm', value = 'wait'),
         ], style={'display': 'none'}
         ),
 
         # status indicators
         html.Div([        
-            daq.Indicator(id='start-indicator',label="Files Uploaded",value=True,color='grey'),
+            daq.Indicator(id='start-indicator-perm',label="Files Uploaded",value=True,color='grey'),
         ], style={'width': '30%', 'display': 'inline-block'}
         ),
         html.Div([
-            daq.Indicator(id='xlsx2csv-indicator',label="Parsing Files",value=True,color='grey'),
+            daq.Indicator(id='xlsx2csv-indicator-perm',label="Parsing Files",value=True,color='grey'),
         ], style={'width': '30%', 'display': 'inline-block'}
         ),
         html.Div([        
-            daq.Indicator(id='csvcombine-indicator',label="Combining Data",value=True,color='grey'),
+            daq.Indicator(id='csvcombine-indicator-perm',label="Combining Data",value=True,color='grey'),
         ], style={'width': '30%', 'display': 'inline-block'}
         ),
 
          
         # dcc.Interval(id="progress-interval", n_intervals=0, interval=500),
-        dbc.Progress(id="progress"),       
-        html.Div(id='parsing status', children='wait for input data'),  # add a section to store and display output
+        dbc.Progress(id="progress-perm"),       
+        html.Div(id='parsing-status-perm', children='wait for input data'),  # add a section to store and display output
         html.Br(),
   
     ],
@@ -107,11 +107,11 @@ train = dbc.Container([
         html.H4("Train dataset"),
         html.Div(
             [
-                dbc.Button("Start/stop training", id="submit-training", n_clicks=0),
-                dbc.Spinner(html.Div(id="submiting-training")),
+                dbc.Button("Start/stop training", id="submit-training-perm", n_clicks=0),
+                dbc.Spinner(html.Div(id="submiting-training-perm")),
             ]
         ),
-        daq.Indicator(id='train-indicator',label="Training Done",value=True,color='grey'),
+        daq.Indicator(id='train-indicator-perm',label="Training Done",value=True,color='grey'),
         html.Br(),
     ])
 ])

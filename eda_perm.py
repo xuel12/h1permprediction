@@ -49,6 +49,14 @@ edaplotPERM = pickle.load(pickle_in_perm)
 
 
 ############################################################################################################
+fig_submit_date = go.Figure(data=[go.Scatter(
+    x=edaplotPERM['CASE_RECEIVED_DATE'].index,
+    y=edaplotPERM['CASE_RECEIVED_DATE']['DENIED']/(edaplotPERM['CASE_RECEIVED_DATE']['CERTIFIED']+edaplotPERM['CASE_RECEIVED_DATE']['DENIED']),
+    mode='lines+markers')]
+    )
+fig_submit_date.update_xaxes(tickangle=-90, tickfont=dict(size=12))
+fig_submit_date.update_layout(xaxis_title='Month',yaxis_title='DENIED Rate')
+
 fig_case_status_perm = go.Figure(data=[go.Bar(x=edaplotPERM['CASE_STATUS'].index,
                                        y=edaplotPERM['CASE_STATUS']['countvar'])])
 
@@ -105,12 +113,25 @@ body = dbc.Container(
         ),
         # dbc.Button("View details", color="secondary"),
 
-        html.H3("CASE_STATUS OVER 5 YEARS"),
         dbc.Row(
             [
-                dcc.Graph(
-                    id='case_status_perm',
-                    figure=fig_case_status_perm ,
+                dbc.Col(
+                    [
+                        html.H4("CASE_STATUS"),
+                        dcc.Graph(
+                            id='fig_case_status_perm',
+                            figure=fig_case_status_perm,
+                        ),
+                    ]
+                ),
+                dbc.Col(
+                    [
+                        html.H4("CASE_STATUS OVER 5 YEARS"),
+                        dcc.Graph(
+                            id='case_status_perm',
+                            figure=fig_submit_date,
+                        ),
+                    ]
                 ),
             ]
         ),

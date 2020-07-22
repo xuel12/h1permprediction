@@ -45,6 +45,9 @@ edaplot = pickle.load(pickle_in)
 # fig = px.scatter(df, x="x", y="y", color="fruit", custom_data=["customdata"])
 # fig = px.pie(edaplot['EMPLOYER_STATE'], values='CASE_STATUS', names='CASE_STATUS', title='Population of European continent')
 
+fig_case_status = go.Figure(data=[go.Bar(x=edaplot['CASE_STATUS'].index,
+                                        y=edaplot['CASE_STATUS']['countvar'])])
+
 fig_employter_state = go.Figure(data=[go.Pie(labels=edaplot['EMPLOYER_STATE'].index, 
                                              values=edaplot['EMPLOYER_STATE']['CASE_STATUS'])],
                                 # layout = {'title':'EMPLOYER_STATE'}
@@ -93,13 +96,26 @@ body = dbc.Container(
               ),
         # dbc.Button("View details", color="secondary"),
         
-        html.H3("Denied Rate OVER 5 YEARS"),
         dbc.Row(
-        [
-            dcc.Graph(
-                        id='submit_date',
-                        figure = fig_submit_date,
-                    ),
+            [
+                dbc.Col(
+                    [
+                        html.H4("CASE_STATUS"),
+                        dcc.Graph(
+                            id='fig_case_status',
+                            figure=fig_case_status,
+                        ),
+                    ]
+                ),
+                dbc.Col(
+                    [
+                        html.H4("Denied Rate OVER 5 YEARS"),
+                        dcc.Graph(
+                            id='submit_date',
+                            figure = fig_submit_date,
+                        ),
+                    ]
+                ),
             ]
         ),
         
