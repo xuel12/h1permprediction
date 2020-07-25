@@ -9,12 +9,14 @@ virtualenv -p python3.7 venv
 2. install packages  
 pip install -r conf/requirements.txt
 3. spin on app  
-python ui.py
+python index.py
 
 #### Note
 
 In the directory dialog, the path should be a folder, e.g. /user/.
-* the training data will be kept in /user/input
+* the training data for H1B will be kept in /user/input_h1b
+* the training data for PERM will be kept in /user/input_perm
+* the discription for for training data will be kept in /user/header, naming headers.csv and PERMheaders.csv
 * the prediction data will be kept in /user/predict
 * the code will be in /user/h1permprediction
 * the model will be in /user/model

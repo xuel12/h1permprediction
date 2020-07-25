@@ -34,8 +34,9 @@ from eda_perm import EDA_perm
 # from constants import JOB_LEVEL_MAP,US_STATE_ABBREV
 
 import pandas as pd
+import numpy as np
 import pickle
-
+from sklearn.linear_model import LogisticRegression
 
 
 BASE_DIR = "/Users/xuel12/Documents/MSdatascience/DS5500datavis/project2/"
@@ -84,6 +85,7 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.config.suppress_callback_exceptions = True
 
 
+    
 @server.route(constants.DOWNLOAD_DIR + "<path:path>")
 def download(path):
     """Serve a file from the upload directory."""
@@ -254,6 +256,8 @@ def update_combinedata(count_newcsv, value):  # define the function reaching out
         temp_dir = folderStruct(base_path)['temp_dir']
         input_dir = folderStruct(base_path)['input_dir']
         header_dir = folderStruct(base_path)['header_dir']
+        model_dir = folderStruct(base_path)['model_dir']
+
         outputfile = 'h1b2015to2020.csv'
         headerfile = 'headers.csv'
         
@@ -261,7 +265,7 @@ def update_combinedata(count_newcsv, value):  # define the function reaching out
         if count_newcsv > 0 or not os.path.exists(temp_dir + outputfile):
             csvCombine(input_dir, temp_dir, header_dir, outputfile, headerfile)
         
-        makeEDAreports(outputfile, temp_dir)
+        makeEDAreports(outputfile, temp_dir, model_dir)
 
         finish_message = 'Data parsing complete, find the parsed combineCSV in directory'
         # return progress, f"{progress} %" if progress >= 5 else ""
@@ -280,6 +284,7 @@ def update_combinedata_perm(count_newcsv, value):  # define the function reachin
         input_dir = folderStruct(base_path)['input_dir_perm']
         temp_dir = folderStruct(base_path)['temp_dir']
         header_dir = folderStruct(base_path)['header_dir']
+        model_dir = folderStruct(base_path)['model_dir']
         outputfile = 'perm2015to2020.csv'
         headerfile = 'PERM_headers.csv'
         
@@ -287,7 +292,7 @@ def update_combinedata_perm(count_newcsv, value):  # define the function reachin
         if count_newcsv > 0 or not os.path.exists(temp_dir + outputfile):
             csvCombine_perm(input_dir, temp_dir, header_dir, outputfile, headerfile)
         
-        makeEDAreports_perm(outputfile, temp_dir)
+        makeEDAreports_perm(outputfile, temp_dir, model_dir)
 
         finish_message = 'Data parsing complete, find the parsed combineCSV in directory'
         # return progress, f"{progress} %" if progress >= 5 else ""
@@ -443,10 +448,10 @@ def folderStruct(BASE_DIR):
     TEMP_DIR = BASE_DIR + "temp/"
     INPUT_DIR_PERM = BASE_DIR + "input_perm/"
     # PREDICT_DIR = BASE_PATH + "predict/"
-    MODEL_DIR = BASE_DIR + "model/"
     # OUTPUT_DIR = BASE_PATH + "output/"
     DOWNLOAD_DIR = BASE_DIR + "download/"
-    HEADER_DIR = BASE_DIR + 'header/'
+    HEADER_DIR = CODE_DIR + 'header/'
+    MODEL_DIR = CODE_DIR + "model/"
 
     os.chdir(CODE_DIR)
     # base_path = BASE_PATH
@@ -545,7 +550,7 @@ def csvCombine(input_dir, temp_dir, header_dir, outputfile, headerfile):
                         'EMPLOYER_STATE': constants.US_STATE_ABBREV,
                         'WORKSITE_STATE': constants.US_STATE_ABBREV,
                         "PREVAILING_WAGE": {'NAN': -1},
-                        "PW_UNIT_OF_PAY": {'NAN': 'UNKNOWN'},
+                        "PW_UNIT_OF_PAY": constants.UNIT_MAP,
                         })
     df["PREVAILING_WAGE"] = pd.to_numeric(df["PREVAILING_WAGE"], downcast="float")
     df = df.replace({'NAN': 'UNKOWN'})
@@ -577,8 +582,12 @@ def csvCombine_perm(input_dir, temp_dir, header_dir, outputfile, headerfile):
                       parse_dates=[headers_temp['CASE_RECEIVED_DATE']]).dropna(how='all')
             # filter rows, Remove "Withdraw" and "Certified Expired"
             df = df[((df['CASE_STATUS'].str.upper() == 'CERTIFIED') | \
-                      (df['CASE_STATUS'].str.upper() == 'DENIED'))]  
-               
+                      (df['CASE_STATUS'].str.upper() == 'DENIED'))]
+            df = df.replace({'WORKSITE_STATE': constants.US_STATE_ABBREV,
+                             'JOB_INFO_WORK_STATE': constants.US_STATE_ABBREV,
+                    })
+            df = df.fillna('UNKOWN')
+   
             # # Similarly, most of employer come from the U.S.. We only keep application with American employer
             # df = df[df.EMPLOYER_COUNTRY == 'UNITED STATES OF AMERICA']
      
@@ -611,7 +620,7 @@ def levelClassifier(job_title):
         return 'OTHER'
     
     
-def makeEDAreports(csvfile, temp_dir):
+def makeEDAreports(csvfile, temp_dir, model_dir):
     csvfile = 'h1b2015to2020.csv'
     df = pd.read_csv(temp_dir + csvfile, parse_dates=['CASE_SUBMITTED'])
     df["PW_WAGE_LEVEL"] = df["PW_WAGE_LEVEL"].map(constants.JOB_LEVEL_MAP)
@@ -633,12 +642,12 @@ def makeEDAreports(csvfile, temp_dir):
         .count().reset_index().pivot(index='CASE_SUBMITTED', columns='CASE_STATUS', values='JOB_CATEGORY'))
     
                
-    pickle_out = open(temp_dir+"eda.pickle","wb")
+    pickle_out = open(model_dir+"eda.pickle","wb")
     pickle.dump(edaplot, pickle_out)
     pickle_out.close()
 
 
-def makeEDAreports_perm(csvfile, temp_dir):
+def makeEDAreports_perm(csvfile, temp_dir, model_dir):
     csvfile = 'perm2015to2020.csv'
     perm = pd.read_csv(temp_dir + csvfile, parse_dates=['CASE_RECEIVED_DATE'])
     perm = perm.fillna("Unknown")
@@ -669,9 +678,131 @@ def makeEDAreports_perm(csvfile, temp_dir):
     edaplot['CASE_RECEIVED_DATE'] = (perm.groupby(['CASE_STATUS', pd.Grouper(key='CASE_RECEIVED_DATE', freq='M')])['JOB_INFO_WORK_STATE']
         .count().reset_index().pivot(index='CASE_RECEIVED_DATE', columns='CASE_STATUS', values='JOB_INFO_WORK_STATE'))
 
-    pickle_out = open(temp_dir + "edaPERM.pickle", "wb")
+    pickle_out = open(model_dir + "edaPERM.pickle", "wb")
     pickle.dump(edaplot, pickle_out)
     pickle_out.close()
+
+
+# h1b prediction
+@app.callback(
+    [Output("my-output", "children"), Output('predict-indicator', 'color'), 
+     Output("submitting-predict", "children")],
+    [Input("submit-predict", "n_clicks"), Input("MODEL_dropdown", "value"),
+     Input("EMPLOYER_STATE_dropdown", "value"),
+        Input("WORKSITE_STATE_dropdown", "value"),
+        Input("JOB_CATEGORY_dropdown", "value"),
+        Input("JOB_LEVEL_dropdown", "value"),
+        Input("FULL_TIME_POSITION_dropdown", "value"),
+        Input("PW_UNIT_OF_PAY_dropdown", "value"),
+        Input("PW_WAGE_LEVEL_dropdown", "value"),
+        Input("H-1B_DEPENDENT_dropdown", "value"),
+        Input("WILLFUL_VIOLATOR_dropdown", "value")
+    ])
+def predict_h1b(n_clicks, modelchoice, employer_state, worksite_state, job_category, job_level, 
+                      fulltime_position, wage_unit, wage_level, dependent, violator):
+    model_dir = folderStruct(base_path)['model_dir']
+
+    # input_dict = {
+    #     "employer_state": employer_state,
+    #     "worksite_state": worksite_state,
+    #     "job_category": job_category,
+    #     "job_level": job_level,
+    #     "fulltime_position":fulltime_position,
+    #     "wage_unit":wage_unit,
+    #     "wage_level":wage_level,
+    #     "dependent":dependent,
+    #     "violator":violator,
+    # }
+
+    if modelchoice == 'Pre-trained':
+        model_filename = 'H1B_LR_MODEL_2020.pickle'
+        color = 'red'
+    else:
+        model_filename = 'H1B_USER_MODEL.pickle'
+        color = 'blue'
+
+
+    with open(model_dir + model_filename, 'rb') as file:  
+        model = pickle.load(file)
+    
+
+    if n_clicks % 2 == 1:
+        time.sleep(1)
+        progress = 'Done'
+        result = model.predict(np.array([[0]*151]))[0]
+    else:
+        progress = 'Standby'
+        result = ''
+
+
+    # data20 = df[cate_column_name].iloc[:100,].copy()
+    # data20 = pd.get_dummies(data20, columns=cate_column_name)
+    # data20 = data20.reset_index(drop=True)
+    return 'Prediction result: {}'.format(result), color, progress
+
+
+
+
+@app.callback(
+    Output("train-indicator", "color"), 
+    [Input("submit-training", "n_clicks")]
+    )
+def UsertrainH1B(n_clicks):
+    temp_dir = folderStruct(base_path)['temp_dir']
+    model_dir = folderStruct(base_path)['model_dir']
+
+    if n_clicks % 2 == 1:
+        df = pd.read_csv(temp_dir+'h1b2015to2020_sub.csv', engine = 'python')
+        # df["PW_UNIT_OF_PAY"] = df["PW_UNIT_OF_PAY"].replace(constants.UNIT_MAP)
+
+        df = df[constants.H1B_TRAIN_FEATURES]
+
+        data = pd.get_dummies(df, columns=constants.H1B_CATEG_FEATURES)
+        data = data.reset_index(drop=True)
+        X_train = data.drop(['CASE_STATUS'], axis=1)
+        y_train = data['CASE_STATUS']
+        model = LogisticRegression(max_iter=1000)
+        model.fit(X_train, y_train)
+    
+        pickle_out = open(model_dir + "H1B_USER_MODEL.pickle", "wb")
+        pickle.dump(model, pickle_out)
+        pickle_out.close()
+        color = 'blue'
+    else:
+        color = 'grey'
+    return color
+    
+
+@app.callback(
+    Output("train-indicator-perm", "color"), 
+    [Input("submit-training-perm", "n_clicks")]
+    )
+def UsertrainPERM(n_clicks):
+    temp_dir = folderStruct(base_path)['temp_dir']
+    model_dir = folderStruct(base_path)['model_dir']
+
+    if n_clicks % 2 == 1:
+        df = pd.read_csv(temp_dir+'perm2015to2019_sub.csv', engine = 'python')
+
+        df = df[constants.PERM_TRAIN_FEATURES]
+
+        data = pd.get_dummies(df, columns=constants.PERM_CATEG_FEATURES)
+        data = data.reset_index(drop=True)
+        
+        X_train = data.drop(['CASE_STATUS'], axis=1)
+        y_train = data['CASE_STATUS']
+
+        model = LogisticRegression(max_iter=1000)
+        model.fit(X_train, y_train)
+    
+        pickle_out = open(model_dir + "PERM_USER_MODEL.pickle", "wb")
+        pickle.dump(model, pickle_out)
+        pickle_out.close()
+        color = 'blue'
+    else:
+        color = 'grey'
+    return color
+
 
 
 if __name__ == '__main__':

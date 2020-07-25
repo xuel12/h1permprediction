@@ -35,7 +35,7 @@ if not os.path.exists(download_dir):
     
 nav = Navbar()
 
-pickle_in_perm = open(temp_dir + "edaPERM.pickle","rb")
+pickle_in_perm = open(model_dir + "edaPERM.pickle","rb")
 
 # if not os.path.exists(input_dir):
 #     os.makedirs(input_dir)
