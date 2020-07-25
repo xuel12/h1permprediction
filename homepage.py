@@ -43,17 +43,25 @@ df = pd.read_csv(temp_dir+'h1b2015to2020_sub.csv')
 
 options_dict = {}
 options_dict['MODEL'] = ['Pre-trained', 'User-defined']
+# options_dict['EMPLOYER_STATE'] = list(set(constants.US_STATE_ABBREV.values()))
+# options_dict['WORKSITE_STATE'] = list(set(constants.US_STATE_ABBREV.values()))
+# options_dict['JOB_CATEGORY'] = df['JOB_CATEGORY'].unique().tolist()
+# options_dict['JOB_LEVEL'] = df['JOB_LEVEL'].unique().tolist()
+# options_dict['FULL_TIME_POSITION'] = df['FULL_TIME_POSITION'].unique().tolist()
+# options_dict['PW_UNIT_OF_PAY'] = df['PW_UNIT_OF_PAY'].unique().tolist()
+# options_dict['PW_WAGE_LEVEL'] = df['PW_WAGE_LEVEL'].unique().tolist()
+# options_dict['H-1B_DEPENDENT'] = df['H-1B_DEPENDENT'].unique().tolist()
+# options_dict['WILLFUL_VIOLATOR'] = df['WILLFUL_VIOLATOR'].unique().tolist()
+
 options_dict['EMPLOYER_STATE'] = list(set(constants.US_STATE_ABBREV.values()))
 options_dict['WORKSITE_STATE'] = list(set(constants.US_STATE_ABBREV.values()))
-# options_dict['EMPLOYER_COUNTRY'] = df['EMPLOYER_COUNTRY'].unique().tolist()
-# options_dict['JOB_TITLE'] = df['JOB_TITLE'].unique().tolist()
-options_dict['JOB_CATEGORY'] = df['JOB_CATEGORY'].unique().tolist()
-options_dict['JOB_LEVEL'] = df['JOB_LEVEL'].unique().tolist()
-options_dict['FULL_TIME_POSITION'] = df['FULL_TIME_POSITION'].unique().tolist()
-options_dict['PW_UNIT_OF_PAY'] = df['PW_UNIT_OF_PAY'].unique().tolist()
-options_dict['PW_WAGE_LEVEL'] = df['PW_WAGE_LEVEL'].unique().tolist()
-options_dict['H-1B_DEPENDENT'] = df['H-1B_DEPENDENT'].unique().tolist()
-options_dict['WILLFUL_VIOLATOR'] = df['WILLFUL_VIOLATOR'].unique().tolist()
+options_dict['JOB_CATEGORY'] = list(set(constants.JOB_CATEGORY_DROPDOWN))
+options_dict['JOB_LEVEL'] = list(set(constants.JOB_LEVEL_DROPDOWN))
+options_dict['FULL_TIME_POSITION'] = list(set(constants.FULL_TIME_POSITION_DROPDOWN))
+options_dict['PW_UNIT_OF_PAY'] = list(set(constants.PW_UNIT_OF_PAY_DROPDOWN))
+options_dict['PW_WAGE_LEVEL'] = list(set(constants.PW_WAGE_LEVEL_DROPDOWN))
+options_dict['H-1B_DEPENDENT'] = list(set(constants.H1B_DEPENDENT_DROPDOWN))
+options_dict['WILLFUL_VIOLATOR'] = list(set(constants.WILLFUL_VIOLATOR_DROPDOWN))
 
 
 options = {}
@@ -81,7 +89,7 @@ body = dbc.Container(
 )
 
 dropdown = dbc.Container([
-    html.H4("Predict new H1B data"),
+    html.H4("Predict new H1B application"),
 
     dbc.Row(
             [dbc.Col([

@@ -702,44 +702,71 @@ def predict_h1b(n_clicks, modelchoice, employer_state, worksite_state, job_categ
                       fulltime_position, wage_unit, wage_level, dependent, violator):
     model_dir = folderStruct(base_path)['model_dir']
 
-    # input_dict = {
-    #     "employer_state": employer_state,
-    #     "worksite_state": worksite_state,
-    #     "job_category": job_category,
-    #     "job_level": job_level,
-    #     "fulltime_position":fulltime_position,
-    #     "wage_unit":wage_unit,
-    #     "wage_level":wage_level,
-    #     "dependent":dependent,
-    #     "violator":violator,
-    # }
+    input_dict = {
+        "EMPLOYER_STATE": [employer_state],
+        "WORKSITE_STATE": [worksite_state],
+        "JOB_CATEGORY": [job_category],
+        "JOB_LEVEL": [job_level],
+        "FULL_TIME_POSITION":[fulltime_position],
+        "PW_UNIT_OF_PAY":[wage_unit],
+        "PW_WAGE_LEVEL":[wage_level],
+        "H-1B_DEPENDENT":[dependent],
+        "WILLFUL_VIOLATOR":[violator],
+    }
 
+    # input_dict = {
+    #     "EMPLOYER_STATE": ['CA'],
+    #     "WORKSITE_STATE": ['CA'],
+    #     "JOB_CATEGORY": ['SCIENTISTS'],
+    #     "JOB_LEVEL": ['SENIOR'],
+    #     "FULL_TIME_POSITION":['Y'],
+    #     "PW_UNIT_OF_PAY":['YEAR'],
+    #     "PW_WAGE_LEVEL":['UNKNOWN'],
+    #     "H-1B_DEPENDENT":['N'],
+    #     "WILLFUL_VIOLATOR":['N'],
+    # }
+    
     if modelchoice == 'Pre-trained':
         model_filename = 'H1B_LR_MODEL_2020.pickle'
+        col_file = 'H1B_LR_MODEL_2020_COL.pickle'
         color = 'red'
     else:
         model_filename = 'H1B_USER_MODEL.pickle'
+        col_file = 'H1B_USER_MODEL_COL.pickle'
         color = 'blue'
-
 
     with open(model_dir + model_filename, 'rb') as file:  
         model = pickle.load(file)
-    
+    with open(model_dir + col_file, 'rb') as file:  
+        col_sample = pickle.load(file)  
 
+
+    df = pd.DataFrame.from_dict(input_dict)
+    print(df)
+    
+    data = pd.get_dummies(df)
+    missing_cols = set(col_sample.columns) - set(data.columns)
+    # Add a missing column in user info with default value equal to 0
+    for c in missing_cols:
+        data[c] = 0
+    
+    # Ensure the order of column in the user info is in the same order than in train set
+    data = data[col_sample.columns]
+    
     if n_clicks % 2 == 1:
         time.sleep(1)
         progress = 'Done'
-        result = model.predict(np.array([[0]*151]))[0]
+        # result = model.predict(np.array([[0]*151]))[0]
+        result, prob = [model.predict(data)[0], model.predict_proba(data)[0][0]]
     else:
         progress = 'Standby'
-        result = ''
+        result, prob = ['Not available','Not available']
 
 
     # data20 = df[cate_column_name].iloc[:100,].copy()
     # data20 = pd.get_dummies(data20, columns=cate_column_name)
     # data20 = data20.reset_index(drop=True)
-    return 'Prediction result: {}'.format(result), color, progress
-
+    return 'Prediction result: {}, Certified probability is {}'.format(result, prob), color, progress
 
 
 
@@ -753,20 +780,27 @@ def UsertrainH1B(n_clicks):
 
     if n_clicks % 2 == 1:
         df = pd.read_csv(temp_dir+'h1b2015to2020_sub.csv', engine = 'python')
-        # df["PW_UNIT_OF_PAY"] = df["PW_UNIT_OF_PAY"].replace(constants.UNIT_MAP)
 
         df = df[constants.H1B_TRAIN_FEATURES]
 
         data = pd.get_dummies(df, columns=constants.H1B_CATEG_FEATURES)
         data = data.reset_index(drop=True)
+        
         X_train = data.drop(['CASE_STATUS'], axis=1)
         y_train = data['CASE_STATUS']
+        COLsample = X_train.head(1)
+
         model = LogisticRegression(max_iter=1000)
         model.fit(X_train, y_train)
     
         pickle_out = open(model_dir + "H1B_USER_MODEL.pickle", "wb")
         pickle.dump(model, pickle_out)
         pickle_out.close()
+        
+        pickle_out2 = open(model_dir + "H1B_USER_MODEL_COL.pickle", "wb")
+        pickle.dump(COLsample, pickle_out2)
+        pickle_out2.close()
+    
         color = 'blue'
     else:
         color = 'grey'
@@ -791,6 +825,7 @@ def UsertrainPERM(n_clicks):
         
         X_train = data.drop(['CASE_STATUS'], axis=1)
         y_train = data['CASE_STATUS']
+        COLsample = X_train.head(1)
 
         model = LogisticRegression(max_iter=1000)
         model.fit(X_train, y_train)
@@ -798,6 +833,11 @@ def UsertrainPERM(n_clicks):
         pickle_out = open(model_dir + "PERM_USER_MODEL.pickle", "wb")
         pickle.dump(model, pickle_out)
         pickle_out.close()
+        
+        pickle_out2 = open(model_dir + "PERM_USER_MODEL_COL.pickle", "wb")
+        pickle.dump(COLsample, pickle_out2)
+        pickle_out2.close()
+        
         color = 'blue'
     else:
         color = 'grey'

@@ -322,3 +322,421 @@ PERM_CATEG_FEATURES = [
     "FW_INFO_TRAINING_COMP"
 ]
 
+STATE_DROPDOWN = [
+    'AL',
+    'AK',
+    'AS',
+    'AZ',
+    'AR',
+    'CA',
+    'CO',
+    'CT',
+    'DE',
+    'DC',
+    'FL',
+    'GA',
+    'GU',
+    'HI',
+    'ID',
+    'IL',
+    'IN',
+    'IA',
+    'KS',
+    'KY',
+    'LA',
+    'ME',
+    'MD',
+    'MA',
+    'MI',
+    'MN',
+    'MS',
+    'MO',
+    'MT',
+    'NE',
+    'NV',
+    'NH',
+    'NJ',
+    'NM',
+    'NY',
+    'NC',
+    'ND',
+    'MP',
+    'OH',
+    'OK',
+    'OR',
+    'PA',
+    'PR',
+    'RI',
+    'SC',
+    'SD',
+    'TN',
+    'TX',
+    'UT',
+    'VT',
+    'VI',
+    'VA',
+    'WA',
+    'WV',
+    'WI',
+    'WY'
+]
+
+
+JOB_CATEGORY_DROPDOWN = [
+    'MANAGERIAL, ADMIN',
+    'FINANCIALS, COMPLIANCE',
+    'COMPUTING, STATISTICIANS',
+    'ENGINEERING EXCEPT COMPUTERS',
+    'SCIENTISTS',
+    'PSYCHOLOGY , COUNSELLING , SOCIAL WORKS',
+    'LEGAL',
+    'EDUCATORS , CURATORS',
+    'DESIGNERS , COACHES',
+    'MEDICALS',
+    'HEALTHCARE ASSTS',
+    'SECURITY',
+    'CULINARY',
+    'CLEANING , KEEPING',
+    'RECEIPTIONISTS , SERVICE ATTENDANTS',
+    'ENGINEERING EXCEPT COMPUTERS',
+    'TRADERS , SALES REPS',
+    'QUALITY , STATISTICAL ASSTS',
+    'AGRICULTURAL',
+    'ARTISANS',
+    'SERVICE TECHNICIANS',
+    'MACHINISTS',
+    'TRANSPORT',
+    'ENGINEERING EXCEPT COMPUTERS',
+    'OTHER'
+]
+
+
+JOB_LEVEL_DROPDOWN = [
+      'SENIOR',
+      'JUNIOR',
+      'OTHER'
+]
+
+
+FULL_TIME_POSITION_DROPDOWN = [
+    'Y',
+    'N',
+]
+
+PW_UNIT_OF_PAY_DROPDOWN = [
+    'YEAR',
+    'BI-WEEKLY',
+    'HOUR',
+    'MONTH',
+    'WEEK',
+]
+
+PW_WAGE_LEVEL_DROPDOWN = [
+      'UNKNOWN',
+      'LEVEL I',
+      'LEVEL II',
+      'LEVEL III',
+      'LEVEL IV',
+]
+
+H1B_DEPENDENT_DROPDOWN = [
+    'Y',
+    'N',
+    'UNKNOWN',
+]
+
+WILLFUL_VIOLATOR_DROPDOWN = [
+    'Y',
+    'N',
+]
+
+# PERM_REFILE_dropdown= {
+#     'N',
+#     'Y'
+# }
+
+# PERM_WORKSITE_STATE_dropdown = STATE_dropdown
+
+# PERM_FW_OWNERSHIP_INTEREST_dropdown = {
+#     'N',
+#     'Y'
+# }
+
+# PERM_PW_SKILL_LEVEL_dropdown = {
+#   "Level I",
+#   "Level II",
+#   "Level III",
+#   "Level IV",
+#   'Unknown',
+# }
+
+# PERM_MINIMUM_EDUCATION_dropdown = {
+#  "Associate's",
+#  "Bachelor's",
+#  "Doctorate",
+#  "High School",
+#  "Master's",
+#  "None",
+#  "Other",
+# }
+
+# PERM_REQUIRED_TRAINING_dropdown = {
+#     'N',
+#     'Y'
+# }
+
+# PERM_ACCEPT_ALT_FIELD_OF_STUDY_dropdown ={
+#     'N',
+#     'Y'
+# }
+
+# PERM_JOB_OPP_REQUIREMENTS_NORMAL_dropdown = {
+#     'N',
+#     'Y'
+# }
+
+# PERM_FOREIGN_LANGUAGE_REQUIRED_dropdown = {
+#     'N',
+#     'Y'
+# }
+
+# PERM_PROFESSIONAL_OCCUPATION_dropdown = {
+#     'N',
+#     'Y'
+# }
+
+# PERM_APP_FOR_COLLEGE_U_TEACHER_dropdown = {
+#     'N',
+#     'Y'
+# }
+
+# PERM_FOREIGN_WORKER_BIRTH_COUNTRY_dropdown = {
+# "AFGHANISTAN",
+# "ALBANIA",
+# "ALGERIA",
+# "ANGOLA",
+# "ANTIGUA AND BARBUDA",
+# "ARGENTINA",
+# "ARMENIA",
+# "ARUBA",
+# "AUSTRALIA",
+# "AUSTRIA",
+# "AZERBAIJAN",
+# "BAHAMAS",
+# "BAHRAIN",
+# "BANGLADESH",
+# "BARBADOS",
+# "BELARUS",
+# "BELGIUM",
+# "BELIZE",
+# "BENIN",
+# "BERMUDA",
+# "BHUTAN",
+# "BOLIVIA",
+# "BOSNIA AND HERZEGOVINA",
+# "BOTSWANA",
+# "BRAZIL",
+# "BRUNEI",
+# "BULGARIA",
+# "BURKINA FASO",
+# "BURMA (MYANMAR)",
+# "CAMBODIA",
+# "CAMEROON",
+# "CANADA",
+# "CHAD",
+# "CHILE",
+# "CHINA",
+# "COLOMBIA",
+# "COSTA RICA",
+# "COTE d'IVOIRE",
+# "CROATIA",
+# "CUBA",
+# "CURACAO",
+# "CYPRUS",
+# "CZECH REPUBLIC",
+# "CZECHOSLOVAKIA",
+# "DEMOCRATIC REPUBLIC OF CONGO",
+# "DENMARK",
+# "DOMINICAN REPUBLIC",
+# "ECUADOR",
+# "EGYPT",
+# "EL SALVADOR",
+# "ERITREA",
+# "ESTONIA",
+# "ETHIOPIA",
+# "FIJI",
+# "FINLAND",
+# "FRANCE",
+# "GABON",
+# "GAMBIA",
+# "GEORGIA",
+# "GERMANY",
+# "GHANA",
+# "GREECE",
+# "GRENADA",
+# "GUATEMALA",
+# "GUYANA",
+# "HAITI",
+# "HONDURAS",
+# "HONG KONG",
+# "HUNGARY",
+# "ICELAND",
+# "INDIA",
+# "INDONESIA",
+# "IRAN",
+# "IRAQ",
+# "IRELAND",
+# "ISRAEL",
+# "ITALY",
+# "JAMAICA",
+# "JAPAN",
+# "JORDAN",
+# "KAZAKHSTAN",
+# "KENYA",
+# "KOSOVO",
+# "KUWAIT",
+# "KYRGYZSTAN",
+# "LAOS",
+# "LATVIA",
+# "LEBANON",
+# "LESOTHO",
+# "LIBERIA",
+# "LIBYA",
+# "LITHUANIA",
+# "LUXEMBOURG",
+# "MACAU",
+# "MACEDONIA",
+# "MALAWI",
+# "MALAYSIA",
+# "MALI",
+# "MAURITANIA",
+# "MAURITIUS",
+# "MEXICO",
+# "MOLDOVA",
+# "MONGOLIA",
+# "MONTENEGRO",
+# "MOROCCO",
+# "MOZAMBIQUE",
+# "NAMIBIA",
+# "NEPAL",
+# "NETHERLANDS",
+# "NETHERLANDS ANTILLES",
+# "NEW ZEALAND",
+# "NICARAGUA",
+# "NIGER",
+# "NIGERIA",
+# "NORWAY",
+# "OMAN",
+# "PAKISTAN",
+# "PALAU",
+# "PALESTINE",
+# "PALESTINIAN TERRITORIES",
+# "PANAMA",
+# "PAPUA NEW GUINEA",
+# "PARAGUAY",
+# "PERU",
+# "PHILIPPINES",
+# "POLAND",
+# "PORTUGAL",
+# "QATAR",
+# "REPUBLIC OF CONGO",
+# "ROMANIA",
+# "RUSSIA",
+# "RWANDA",
+# "SAUDI ARABIA",
+# "SENEGAL",
+# "SERBIA",
+# "SERBIA AND MONTENEGRO",
+# "SIERRA LEONE",
+# "SINGAPORE",
+# "SINT MAARTEN",
+# "SLOVAKIA",
+# "SLOVENIA",
+# "SOUTH AFRICA",
+# "SOUTH KOREA",
+# "SOVIET UNION",
+# "SPAIN",
+# "SRI LANKA",
+# "ST LUCIA",
+# "ST VINCENT",
+# "SUDAN",
+# "SWAZILAND",
+# "SWEDEN",
+# "SWITZERLAND",
+# "SYRIA",
+# "TAIWAN",
+# "TAJIKISTAN",
+# "TANZANIA",
+# "THAILAND",
+# "TOGO",
+# "TRINIDAD AND TOBAGO",
+# "TUNISIA",
+# "TURKEY",
+# "TURKMENISTAN",
+# "UGANDA",
+# "UKRAINE",
+# "UNITED ARAB EMIRATES",
+# "UNITED KINGDOM",
+# "UNITED STATES OF AMERICA",
+# "URUGUAY",
+# "UZBEKISTAN",
+# "VENEZUELA",
+# "VIETNAM",
+# "YEMEN",
+# "YUGOSLAVIA",
+# "ZAMBIA",
+# "ZIMBABWE",
+
+
+# }
+
+# PERM_CLASS_OF_ADMISSION_dropdown = {
+# "A1/A2",
+# "B-1",
+# "B-2",
+# "C-1",
+# "C-3",
+# "E-1",
+# "E-2",
+# "E-3",
+# "EWI",
+# "F-1",
+# "F-2",
+# "G-1",
+# "G-4",
+# "G-5",
+# "H-1A",
+# "H-1B",
+# "H-1B1",
+# "H-2A",
+# "H-2B",
+# "H-3",
+# "H-4",
+# "I",
+# "J-1",
+# "J-2",
+# "L-1",
+# "L-2",
+# "M-1",
+# "Not in USA",
+# "O-1",
+# "O-2",
+# "O-3",
+# "P-1",
+# "P-3",
+# "Parolee",
+# "Q",
+# "R-1",
+# "R-2",
+# "TD",
+# "TN",
+# "TPS",
+# "VWT",
+
+# }
+
+# PERM_FOREIGN_WORKER_TRAINING_COMP_dropdown = {
+#     'N',
+#     'Y',
+#     'Unknown'
+# }
