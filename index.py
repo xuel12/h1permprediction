@@ -553,7 +553,7 @@ def csvCombine(input_dir, temp_dir, header_dir, outputfile, headerfile):
                         "PW_UNIT_OF_PAY": constants.UNIT_MAP,
                         })
     df["PREVAILING_WAGE"] = pd.to_numeric(df["PREVAILING_WAGE"], downcast="float")
-    df = df.replace({'NAN': 'UNKOWN'})
+    df = df.replace({'NAN': 'UNKNOWN'})
 
     # feature engineer on jobs
     df["EMPLOYER_NAME"]=df["EMPLOYER_NAME"].str.replace("INC.","INC")
@@ -583,10 +583,6 @@ def csvCombine_perm(input_dir, temp_dir, header_dir, outputfile, headerfile):
             # filter rows, Remove "Withdraw" and "Certified Expired"
             df = df[((df['CASE_STATUS'].str.upper() == 'CERTIFIED') | \
                       (df['CASE_STATUS'].str.upper() == 'DENIED'))]
-            df = df.replace({'WORKSITE_STATE': constants.US_STATE_ABBREV,
-                             'JOB_INFO_WORK_STATE': constants.US_STATE_ABBREV,
-                    })
-            df = df.fillna('UNKOWN')
    
             # # Similarly, most of employer come from the U.S.. We only keep application with American employer
             # df = df[df.EMPLOYER_COUNTRY == 'UNITED STATES OF AMERICA']
@@ -600,6 +596,17 @@ def csvCombine_perm(input_dir, temp_dir, header_dir, outputfile, headerfile):
                 print('{} has {} columns - skipping'.format(csvfilenames,df.shape[1]))
     df = pd.concat(listofdataframes).reset_index(drop=True)
     
+    # uppercase all string for consistency  
+    df = df.apply(lambda x: x.astype(str).str.upper())
+    df['CASE_RECEIVED_DATE'] = pd.to_datetime(df['CASE_RECEIVED_DATE'])
+    
+    df = df.replace({'WORKSITE_STATE': constants.US_STATE_ABBREV,
+                     'JOB_INFO_WORK_STATE': constants.US_STATE_ABBREV,
+                    })
+    df = df.fillna('UNKNOWN')
+    df = df.replace({'NAN': 'UNKNOWN'})
+
+            
     df.to_csv(temp_dir + outputfile, index=False)
     print('There are {} records.'.format(df.shape[0]))
 
@@ -769,6 +776,102 @@ def predict_h1b(n_clicks, modelchoice, employer_state, worksite_state, job_categ
     return 'Prediction result: {}, Certified probability is {}'.format(result, prob), color, progress
 
 
+# perm prediction
+@app.callback(
+    [Output("my-output-perm", "children"), Output('predict-indicator-perm', 'color'), 
+     Output("submitting-predict-perm", "children")],
+    [Input("submit-predict-perm", "n_clicks"), 
+     Input("PERM_MODEL_dropdown", "value"),
+     Input("PERM_WORKSITE_STATE_dropdown", "value"),
+     Input("PERM_REFILE_dropdown", "value"),
+     Input("PERM_FW_OWNERSHIP_INTEREST_dropdown", "value"),
+     Input("PERM_PW_LEVEL_9089_dropdown", "value"),
+     Input("PERM_JOB_INFO_EDUCATION_dropdown", "value"),
+     Input("PERM_JOB_INFO_TRAINING_dropdown", "value"),
+     Input("PERM_JOB_INFO_ALT_FIELD_dropdown", "value"),
+     Input("PERM_JOB_INFO_JOB_REQ_NORMAL_dropdown", "value"),
+     Input("PERM_JOB_INFO_FOREIGN_LANG_REQ_dropdown", "value"),
+     Input("PERM_RECR_INFO_PROFESSIONAL_OCC_dropdown", "value"),
+     Input("PERM_RECR_INFO_COLL_UNIV_TEACHER_dropdown", "value"),
+     Input("PERM_FW_INFO_BIRTH_COUNTRY_dropdown", "value"),
+     Input("PERM_CLASS_OF_ADMISSION_dropdown", "value"),
+     Input("PERM_FW_INFO_TRAINING_COMP_dropdown", "value")
+    ])
+def predict_perm(n_clicks, modelchoice, worksite_state, refile, ownership, skill_level,
+                      education, training_required, alt_field, require_normal, foregin_language,
+                      professional, college_teacher, birthcountry, visa_class, training_complete):
+    model_dir = folderStruct(base_path)['model_dir']
+
+    input_dict = {
+        "WORKSITE_STATE": [worksite_state],
+        "REFILE": [refile],
+        "FW_OWNERSHIP_INTEREST": [ownership],
+        "PW_LEVEL_9089": [skill_level],
+        "JOB_INFO_EDUCATION":[education],
+        "JOB_INFO_TRAINING":[training_required],
+        "JOB_INFO_ALT_FIELD":[alt_field],
+        "JOB_INFO_JOB_REQ_NORMAL":[require_normal],
+        "JOB_INFO_FOREIGN_LANG_REQ":[foregin_language],
+        "RECR_INFO_PROFESSIONAL_OCC":[professional],
+        "RECR_INFO_COLL_UNIV_TEACHER":[college_teacher],
+        "FW_INFO_BIRTH_COUNTRY":[birthcountry],
+        "CLASS_OF_ADMISSION":[visa_class],
+        "FW_INFO_TRAINING_COMP":[training_complete],
+    }
+
+    # input_dict = {
+    #     "EMPLOYER_STATE": ['CA'],
+    #     "WORKSITE_STATE": ['CA'],
+    #     "JOB_CATEGORY": ['SCIENTISTS'],
+    #     "JOB_LEVEL": ['SENIOR'],
+    #     "FULL_TIME_POSITION":['Y'],
+    #     "PW_UNIT_OF_PAY":['YEAR'],
+    #     "PW_WAGE_LEVEL":['UNKNOWN'],
+    #     "H-1B_DEPENDENT":['N'],
+    #     "WILLFUL_VIOLATOR":['N'],
+    # }
+    
+    if modelchoice == 'Pre-trained':
+        model_filename = 'PERM_RF_MODEL_2020.pickle'
+        col_file = 'PERM_RF_MODEL_2020_COL.pickle'
+        color = 'red'
+    else:
+        model_filename = 'PERM_USER_MODEL.pickle'
+        col_file = 'PERM_USER_MODEL_COL.pickle'
+        color = 'blue'
+
+    with open(model_dir + model_filename, 'rb') as file:  
+        model = pickle.load(file)
+    with open(model_dir + col_file, 'rb') as file:  
+        col_sample = pickle.load(file)  
+
+
+    df = pd.DataFrame.from_dict(input_dict)
+    
+    data = pd.get_dummies(df)
+    missing_cols = set(col_sample.columns) - set(data.columns)
+    # Add a missing column in user info with default value equal to 0
+    for c in missing_cols:
+        data[c] = 0
+    
+    # Ensure the order of column in the user info is in the same order than in train set
+    data = data[col_sample.columns]
+    
+    if n_clicks % 2 == 1:
+        time.sleep(1)
+        progress = 'Done'
+        # result = model.predict(np.array([[0]*151]))[0]
+        result, prob = [model.predict(data)[0], model.predict_proba(data)[0][0]]
+    else:
+        progress = 'Standby'
+        result, prob = ['Not available','Not available']
+
+
+    # data20 = df[cate_column_name].iloc[:100,].copy()
+    # data20 = pd.get_dummies(data20, columns=cate_column_name)
+    # data20 = data20.reset_index(drop=True)
+    return 'Prediction result: {}, Certified probability is {}'.format(result, prob), color, progress
+
 
 @app.callback(
     Output("train-indicator", "color"), 
@@ -779,7 +882,7 @@ def UsertrainH1B(n_clicks):
     model_dir = folderStruct(base_path)['model_dir']
 
     if n_clicks % 2 == 1:
-        df = pd.read_csv(temp_dir+'h1b2015to2020_sub.csv', engine = 'python')
+        df = pd.read_csv(temp_dir+'h1b2015to2020.csv', engine = 'python')
 
         df = df[constants.H1B_TRAIN_FEATURES]
 
@@ -816,7 +919,7 @@ def UsertrainPERM(n_clicks):
     model_dir = folderStruct(base_path)['model_dir']
 
     if n_clicks % 2 == 1:
-        df = pd.read_csv(temp_dir+'perm2015to2019_sub.csv', engine = 'python')
+        df = pd.read_csv(temp_dir+'perm2015to2020.csv', engine = 'python')
 
         df = df[constants.PERM_TRAIN_FEATURES]
 
