@@ -30,11 +30,11 @@ from train import Training
 from train_perm import Training_perm
 from eda import EDA
 from eda_perm import EDA_perm
+from userguide import userGuide, buildModel, aboutEDA, contactus
 
 # from constants import JOB_LEVEL_MAP,US_STATE_ABBREV
 
 import pandas as pd
-import numpy as np
 import pickle
 from sklearn.linear_model import LogisticRegression
 
@@ -109,6 +109,14 @@ def display_page(pathname):
         return EDA()
     elif pathname == '/eda_perm':
         return EDA_perm()
+    elif pathname == '/userguide':
+        return userGuide()
+    elif pathname == '/buildmodel':
+        return buildModel()
+    elif pathname == '/aboutEDA':
+        return aboutEDA()
+    elif pathname == '/contactus':
+        return contactus()
     else:
         return Homepage()
     
