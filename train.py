@@ -6,6 +6,8 @@ Created on Sat Jun 27 15:03:17 2020
 @author: xuel12
 """
 
+from datetime import datetime as dt
+
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
@@ -105,6 +107,19 @@ train = dbc.Container([
     html.Div([
         # training
         html.H4("Train dataset"),
+        html.Br(),
+        html.P("Select date range for training"),
+        html.Div([
+            dcc.DatePickerRange(
+                id='h1b-date-picker-range',
+                min_date_allowed=dt(1995, 8, 5),
+                max_date_allowed=dt(2030, 12, 31),
+                initial_visible_month=dt(2020, 1, 1),
+                # end_date=dt(2017, 8, 25).date()
+            ),
+            html.Div(id='date-picker-range'),
+        ]),
+        html.Br(),
         html.Div(
             [
                 dbc.Button("Start/stop training", id="submit-training", n_clicks=0),

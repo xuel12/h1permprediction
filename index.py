@@ -15,6 +15,7 @@ import glob
 import time
 from urllib.parse import quote as urlquote
 import subprocess
+from datetime import datetime as dt
 
 from flask import Flask, send_from_directory
 import dash
@@ -30,14 +31,15 @@ from train import Training
 from train_perm import Training_perm
 from eda import EDA
 from eda_perm import EDA_perm
-from userguide import userGuide, buildModel, aboutEDA, contactus
+from userguide import userGuide, buildModel, h1bModel, permModel, aboutEDA, contactus
 
 # from constants import JOB_LEVEL_MAP,US_STATE_ABBREV
 
 import pandas as pd
 import pickle
 from sklearn.linear_model import LogisticRegression
-
+from sklearn.ensemble import RandomForestClassifier
+from imblearn.over_sampling import SMOTE
 
 BASE_DIR = "/Users/xuel12/Documents/MSdatascience/DS5500datavis/project2/"
 # BASE_DIR = "/Users/42152/Desktop/"
@@ -113,6 +115,10 @@ def display_page(pathname):
         return userGuide()
     elif pathname == '/buildmodel':
         return buildModel()
+    elif pathname == '/h1bmodel':
+        return h1bModel()
+    elif pathname == '/permmodel':
+        return permModel()
     elif pathname == '/aboutEDA':
         return aboutEDA()
     elif pathname == '/contactus':
@@ -607,9 +613,12 @@ def csvCombine_perm(input_dir, temp_dir, header_dir, outputfile, headerfile):
     # uppercase all string for consistency  
     df = df.apply(lambda x: x.astype(str).str.upper())
     df['CASE_RECEIVED_DATE'] = pd.to_datetime(df['CASE_RECEIVED_DATE'])
+    # filter only cases later than 2015
+    df = df.loc[df['CASE_RECEIVED_DATE'] >= '2015-01-01']
     
     df = df.replace({'WORKSITE_STATE': constants.US_STATE_ABBREV,
                      'JOB_INFO_WORK_STATE': constants.US_STATE_ABBREV,
+                     'EMPLOYER_STATE': constants.US_STATE_ABBREV,
                     })
     df = df.fillna('UNKNOWN')
     df = df.replace({'NAN': 'UNKNOWN'})
@@ -639,7 +648,7 @@ def makeEDAreports(csvfile, temp_dir, model_dir):
     csvfile = 'h1b2015to2020.csv'
     df = pd.read_csv(temp_dir + csvfile, parse_dates=['CASE_SUBMITTED'])
     df["PW_WAGE_LEVEL"] = df["PW_WAGE_LEVEL"].map(constants.JOB_LEVEL_MAP)
-    df = df.replace('UNKOWN','UNKNOWN')
+    # df = df.replace('UNKOWN','UNKNOWN')
     df['countvar'] = 1
 
 
@@ -665,16 +674,17 @@ def makeEDAreports(csvfile, temp_dir, model_dir):
 def makeEDAreports_perm(csvfile, temp_dir, model_dir):
     csvfile = 'perm2015to2020.csv'
     perm = pd.read_csv(temp_dir + csvfile, parse_dates=['CASE_RECEIVED_DATE'])
-    perm = perm.fillna("Unknown")
-    perm["JOB_INFO_WORK_STATE"] = perm["JOB_INFO_WORK_STATE"].map(constants.US_STATE_ABBREV)
-    perm["EMPLOYER_STATE"] = perm["EMPLOYER_STATE"].map(constants.US_STATE_ABBREV)
+
+    # perm = perm.fillna("Unknown")
+    # perm["JOB_INFO_WORK_STATE"] = perm["JOB_INFO_WORK_STATE"].map(constants.US_STATE_ABBREV)
+    # perm["EMPLOYER_STATE"] = perm["EMPLOYER_STATE"].map(constants.US_STATE_ABBREV)
     perm['countvar'] = 1
-    perm = perm.replace('Certified', 'CERTIFIED')
-    perm = perm.replace('Denied', 'DENIED')
+    # perm = perm.replace('Certified', 'CERTIFIED')
+    # perm = perm.replace('Denied', 'DENIED')
 
     edaplot = {}
     edaplot['CASE_STATUS'] = perm.groupby('CASE_STATUS').count()
-    edaplot['EMPLOYER_STATE'] = perm.groupby('EMPLOYER_STATE').count()
+    edaplot['FW_OWNERSHIP_INTEREST'] = perm.groupby('FW_OWNERSHIP_INTEREST').count()
     edaplot['WORKSITE_STATE'] = perm.groupby('JOB_INFO_WORK_STATE').count()
     edaplot['PW_WAGE_LEVEL'] = perm.groupby(['PW_LEVEL_9089','CASE_STATUS'],as_index=False).count()
     edaplot['REFILE'] = perm.groupby(['REFILE','CASE_STATUS'],as_index=False).count()
@@ -691,8 +701,8 @@ def makeEDAreports_perm(csvfile, temp_dir, model_dir):
     edaplot['FW_INFO_TRAINING_COMP'] = perm.groupby(['FW_INFO_TRAINING_COMP', 'CASE_STATUS'], as_index=False).count()
     edaplot['JOB_INFO_JOB_REQ_NORMAL'] = perm.groupby(['JOB_INFO_JOB_REQ_NORMAL', 'CASE_STATUS'], as_index=False).count()
     edaplot['CASE_RECEIVED_DATE'] = (perm.groupby(['CASE_STATUS', pd.Grouper(key='CASE_RECEIVED_DATE', freq='M')])['JOB_INFO_WORK_STATE']
-        .count().reset_index().pivot(index='CASE_RECEIVED_DATE', columns='CASE_STATUS', values='JOB_INFO_WORK_STATE'))
-
+                                     .count().reset_index().pivot(index='CASE_RECEIVED_DATE', columns='CASE_STATUS', values='JOB_INFO_WORK_STATE'))
+    
     pickle_out = open(model_dir + "edaPERM.pickle", "wb")
     pickle.dump(edaplot, pickle_out)
     pickle_out.close()
@@ -827,17 +837,6 @@ def predict_perm(n_clicks, modelchoice, worksite_state, refile, ownership, skill
         "FW_INFO_TRAINING_COMP":[training_complete],
     }
 
-    # input_dict = {
-    #     "EMPLOYER_STATE": ['CA'],
-    #     "WORKSITE_STATE": ['CA'],
-    #     "JOB_CATEGORY": ['SCIENTISTS'],
-    #     "JOB_LEVEL": ['SENIOR'],
-    #     "FULL_TIME_POSITION":['Y'],
-    #     "PW_UNIT_OF_PAY":['YEAR'],
-    #     "PW_WAGE_LEVEL":['UNKNOWN'],
-    #     "H-1B_DEPENDENT":['N'],
-    #     "WILLFUL_VIOLATOR":['N'],
-    # }
     
     if modelchoice == 'Pre-trained':
         model_filename = 'PERM_RF_MODEL_2020.pickle'
@@ -883,15 +882,30 @@ def predict_perm(n_clicks, modelchoice, worksite_state, refile, ownership, skill
 
 @app.callback(
     Output("train-indicator", "color"), 
-    [Input("submit-training", "n_clicks")]
+    [Input("submit-training", "n_clicks"),
+     Input('h1b-date-picker-range', 'start_date'),
+     Input('h1b-date-picker-range', 'end_date')]
     )
-def UsertrainH1B(n_clicks):
+def UsertrainH1B(n_clicks, start_date, end_date):
     temp_dir = folderStruct(base_path)['temp_dir']
     model_dir = folderStruct(base_path)['model_dir']
-
+        
+        
     if n_clicks % 2 == 1:
-        df = pd.read_csv(temp_dir+'h1b2015to2020.csv', engine = 'python')
+        df = pd.read_csv(temp_dir+'h1b2015to2020.csv', parse_dates=['CASE_SUBMITTED'])
 
+        # filter only cases between select range
+        if start_date is not None:
+            start_date = dt.strptime(re.split('T| ', start_date)[0], '%Y-%m-%d')
+        else:
+            start_date = df['CASE_SUBMITTED'].min()
+        if end_date is not None:
+            end_date = dt.strptime(re.split('T| ', end_date)[0], '%Y-%m-%d')
+        else:
+            end_date = df['CASE_SUBMITTED'].max()
+        df = df.loc[(df['CASE_SUBMITTED'] >= start_date) & (df['CASE_SUBMITTED'] <= end_date)]
+
+        # select features for training        
         df = df[constants.H1B_TRAIN_FEATURES]
 
         data = pd.get_dummies(df, columns=constants.H1B_CATEG_FEATURES)
@@ -920,15 +934,28 @@ def UsertrainH1B(n_clicks):
 
 @app.callback(
     Output("train-indicator-perm", "color"), 
-    [Input("submit-training-perm", "n_clicks")]
+    [Input("submit-training-perm", "n_clicks"),
+     Input('perm-date-picker-range', 'start_date'),
+     Input('perm-date-picker-range', 'end_date')]
     )
-def UsertrainPERM(n_clicks):
+def UsertrainPERM(n_clicks, start_date, end_date):
     temp_dir = folderStruct(base_path)['temp_dir']
     model_dir = folderStruct(base_path)['model_dir']
 
     if n_clicks % 2 == 1:
-        df = pd.read_csv(temp_dir+'perm2015to2020.csv', engine = 'python')
+        df = pd.read_csv(temp_dir+'perm2015to2020.csv', parse_dates=['CASE_RECEIVED_DATE'])
 
+        # filter only cases between select range
+        if start_date is not None:
+            start_date = dt.strptime(re.split('T| ', start_date)[0], '%Y-%m-%d')
+        else:
+            start_date = df['CASE_RECEIVED_DATE'].min()
+        if end_date is not None:
+            end_date = dt.strptime(re.split('T| ', end_date)[0], '%Y-%m-%d')
+        else:
+            end_date = df['CASE_RECEIVED_DATE'].max()
+        df = df.loc[(df['CASE_RECEIVED_DATE'] >= start_date) & (df['CASE_RECEIVED_DATE'] <= end_date)]
+        
         df = df[constants.PERM_TRAIN_FEATURES]
 
         data = pd.get_dummies(df, columns=constants.PERM_CATEG_FEATURES)
@@ -938,6 +965,12 @@ def UsertrainPERM(n_clicks):
         y_train = data['CASE_STATUS']
         COLsample = X_train.head(1)
 
+        # # SMOTE with random forest
+        # oversample = SMOTE()
+        # x_train_n, y_train_n = oversample.fit_resample(X_train, y_train)
+        # model = RandomForestClassifier(n_estimators=100, bootstrap=True, criterion='gini', oob_score=True)
+        # model.fit(x_train_n, y_train_n)
+    
         model = LogisticRegression(max_iter=1000)
         model.fit(X_train, y_train)
     

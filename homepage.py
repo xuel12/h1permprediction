@@ -39,45 +39,33 @@ model_dir = constants.MODEL_DIR
 # load data and model
 df = pd.read_csv(temp_dir+'h1b2015to2020_sub.csv')
     
-# df.iloc[1:10000].to_csv(temp_dir+'h1b2015to2020_sub.csv')
-
 options_dict = {}
 options_dict['MODEL'] = ['Pre-trained', 'User-defined']
-# options_dict['EMPLOYER_STATE'] = list(set(constants.US_STATE_ABBREV.values()))
-# options_dict['WORKSITE_STATE'] = list(set(constants.US_STATE_ABBREV.values()))
-# options_dict['JOB_CATEGORY'] = df['JOB_CATEGORY'].unique().tolist()
-# options_dict['JOB_LEVEL'] = df['JOB_LEVEL'].unique().tolist()
-# options_dict['FULL_TIME_POSITION'] = df['FULL_TIME_POSITION'].unique().tolist()
-# options_dict['PW_UNIT_OF_PAY'] = df['PW_UNIT_OF_PAY'].unique().tolist()
-# options_dict['PW_WAGE_LEVEL'] = df['PW_WAGE_LEVEL'].unique().tolist()
-# options_dict['H-1B_DEPENDENT'] = df['H-1B_DEPENDENT'].unique().tolist()
-# options_dict['WILLFUL_VIOLATOR'] = df['WILLFUL_VIOLATOR'].unique().tolist()
-
 options_dict['EMPLOYER_STATE'] = constants.STATE_DROPDOWN
 options_dict['WORKSITE_STATE'] = constants.STATE_DROPDOWN
-options_dict['JOB_CATEGORY'] = list(set(constants.JOB_CATEGORY_DROPDOWN))
-options_dict['JOB_LEVEL'] = list(set(constants.JOB_LEVEL_DROPDOWN))
-options_dict['FULL_TIME_POSITION'] = list(set(constants.FULL_TIME_POSITION_DROPDOWN))
-options_dict['PW_UNIT_OF_PAY'] = list(set(constants.PW_UNIT_OF_PAY_DROPDOWN))
-options_dict['PW_WAGE_LEVEL'] = list(set(constants.PW_WAGE_LEVEL_DROPDOWN))
-options_dict['H-1B_DEPENDENT'] = list(set(constants.H1B_DEPENDENT_DROPDOWN))
-options_dict['WILLFUL_VIOLATOR'] = list(set(constants.WILLFUL_VIOLATOR_DROPDOWN))
+options_dict['JOB_CATEGORY'] = sorted(list(set(constants.JOB_CATEGORY_DROPDOWN)))
+options_dict['JOB_LEVEL'] = constants.JOB_LEVEL_DROPDOWN
+options_dict['FULL_TIME_POSITION'] = constants.FULL_TIME_POSITION_DROPDOWN
+options_dict['PW_UNIT_OF_PAY'] = constants.PW_UNIT_OF_PAY_DROPDOWN
+options_dict['PW_WAGE_LEVEL'] = sorted(list(set(constants.PW_WAGE_LEVEL_DROPDOWN)))
+options_dict['H-1B_DEPENDENT'] = constants.H1B_DEPENDENT_DROPDOWN
+options_dict['WILLFUL_VIOLATOR'] = constants.WILLFUL_VIOLATOR_DROPDOWN
 
 options_dict['PERM_MODEL'] = ['Pre-trained', 'User-defined']
 options_dict['PERM_WORKSITE_STATE'] = constants.STATE_DROPDOWN
-options_dict['PERM_REFILE'] = list(set(constants.PERM_REFILE_DROPDOWN))
-options_dict['PERM_FW_OWNERSHIP_INTEREST'] = list(set(constants.PERM_FW_OWNERSHIP_INTEREST_DROPDOWN))
-options_dict['PERM_PW_LEVEL_9089'] = list(set(constants.PERM_PW_LEVEL_9089_DROPDOWN))
-options_dict['PERM_JOB_INFO_EDUCATION'] = list(set(constants.PERM_JOB_INFO_EDUCATION_DROPDOWN))
-options_dict['PERM_JOB_INFO_TRAINING'] = list(set(constants.PERM_JOB_INFO_TRAINING_DROPDOWN))
-options_dict['PERM_JOB_INFO_ALT_FIELD'] = list(set(constants.PERM_JOB_INFO_ALT_FIELD_DROPDOWN))
-options_dict['PERM_JOB_INFO_JOB_REQ_NORMAL'] = list(set(constants.PERM_JOB_INFO_JOB_REQ_NORMAL_DROPDOWN))
-options_dict['PERM_JOB_INFO_FOREIGN_LANG_REQ'] = list(set(constants.PERM_JOB_INFO_FOREIGN_LANG_REQ_DROPDOWN))
-options_dict['PERM_RECR_INFO_PROFESSIONAL_OCC'] = list(set(constants.PERM_RECR_INFO_PROFESSIONAL_OCC_DROPDOWN))
-options_dict['PERM_RECR_INFO_COLL_UNIV_TEACHER'] = list(set(constants.PERM_RECR_INFO_COLL_UNIV_TEACHER_DROPDOWN))
-options_dict['PERM_FW_INFO_BIRTH_COUNTRY'] = list(set(constants.PERM_FW_INFO_BIRTH_COUNTRY_DROPDOWN))
-options_dict['PERM_CLASS_OF_ADMISSION'] = list(set(constants.PERM_CLASS_OF_ADMISSION_DROPDOWN))
-options_dict['PERM_FW_INFO_TRAINING_COMP'] = list(set(constants.PERM_FW_INFO_TRAINING_COMP_DROPDOWN))
+options_dict['PERM_REFILE'] = constants.PERM_REFILE_DROPDOWN
+options_dict['PERM_FW_OWNERSHIP_INTEREST'] = constants.PERM_FW_OWNERSHIP_INTEREST_DROPDOWN
+options_dict['PERM_PW_LEVEL_9089'] = constants.PERM_PW_LEVEL_9089_DROPDOWN
+options_dict['PERM_JOB_INFO_EDUCATION'] = constants.PERM_JOB_INFO_EDUCATION_DROPDOWN
+options_dict['PERM_JOB_INFO_TRAINING'] = constants.PERM_JOB_INFO_TRAINING_DROPDOWN
+options_dict['PERM_JOB_INFO_ALT_FIELD'] = constants.PERM_JOB_INFO_ALT_FIELD_DROPDOWN
+options_dict['PERM_JOB_INFO_JOB_REQ_NORMAL'] = constants.PERM_JOB_INFO_JOB_REQ_NORMAL_DROPDOWN
+options_dict['PERM_JOB_INFO_FOREIGN_LANG_REQ'] = constants.PERM_JOB_INFO_FOREIGN_LANG_REQ_DROPDOWN
+options_dict['PERM_RECR_INFO_PROFESSIONAL_OCC'] = constants.PERM_RECR_INFO_PROFESSIONAL_OCC_DROPDOWN
+options_dict['PERM_RECR_INFO_COLL_UNIV_TEACHER'] = constants.PERM_RECR_INFO_COLL_UNIV_TEACHER_DROPDOWN
+options_dict['PERM_FW_INFO_BIRTH_COUNTRY'] = sorted(list(set(constants.PERM_FW_INFO_BIRTH_COUNTRY_DROPDOWN)))
+options_dict['PERM_CLASS_OF_ADMISSION'] = sorted(list(set(constants.PERM_CLASS_OF_ADMISSION_DROPDOWN)))
+options_dict['PERM_FW_INFO_TRAINING_COMP'] = constants.PERM_FW_INFO_TRAINING_COMP_DROPDOWN
 
 
 options = {}
@@ -111,22 +99,22 @@ h1b = dbc.Container([
             [dbc.Col([
                 html.Div("Select employer state"),
                 dcc.Dropdown(id = 'EMPLOYER_STATE_dropdown', options = options['EMPLOYER_STATE'], 
-                             placeholder="Select employer state")
+                             placeholder="Select employer state", value = 'CA')
                 ]),
             dbc.Col([
                 html.Div("Select worksite state"),
                 dcc.Dropdown(id = 'WORKSITE_STATE_dropdown', options = options['WORKSITE_STATE'], 
-                             placeholder="Select worksite state"),
+                             placeholder="Select worksite state", value = 'CA'),
                 ]),
             dbc.Col([
                 html.Div("Select job category"),
                 dcc.Dropdown(id = 'JOB_CATEGORY_dropdown', options = options['JOB_CATEGORY'], 
-                             placeholder="Select job category"),
+                             placeholder="Select job category", value = 'COMPUTING, STATISTICIANS'),
                 ]),
             dbc.Col([
                 html.Div("Job level"),
                 dcc.Dropdown(id = 'JOB_LEVEL_dropdown', options = options['JOB_LEVEL'], 
-                             placeholder="Select job level")
+                             placeholder="Select job level", value = 'SENIOR')
                 ]),
             ]
         ),
@@ -135,27 +123,27 @@ h1b = dbc.Container([
             [dbc.Col([
                 html.Div("Full-time position?"),
                 dcc.Dropdown(id = 'FULL_TIME_POSITION_dropdown', options = options['FULL_TIME_POSITION'], 
-                             placeholder="Select full-time position or not")
+                             placeholder="Select full-time position or not", value = 'Y')
                 ]),
             dbc.Col([
                 html.Div("Wage unit of pay?"),
                 dcc.Dropdown(id = 'PW_UNIT_OF_PAY_dropdown', options = options['PW_UNIT_OF_PAY'], 
-                             placeholder="Select wage unit of pay")
+                             placeholder="Select wage unit of pay", value = 'HOUR')
                 ]),
             dbc.Col([
                 html.Div("Wage level"),
                 dcc.Dropdown(id = 'PW_WAGE_LEVEL_dropdown', options = options['PW_WAGE_LEVEL'], 
-                             placeholder="Select wage level"),
+                             placeholder="Select wage level", value = 'LEVEL II'),
                 ]),
             dbc.Col([
                 html.Div("Is there a dependent?"),
                 dcc.Dropdown(id = 'H-1B_DEPENDENT_dropdown', options = options['H-1B_DEPENDENT'], 
-                             placeholder="Select h1b dependent"),
+                             placeholder="Select h1b dependent", value = 'N'),
                 ]),
             dbc.Col([
                 html.Div("Willful violator?"),
                 dcc.Dropdown(id = 'WILLFUL_VIOLATOR_dropdown', options = options['WILLFUL_VIOLATOR'], 
-                             placeholder="Select willful violator of not"),
+                             placeholder="Select willful violator of not", value = 'N'),
                 ]),
             ]
         ),

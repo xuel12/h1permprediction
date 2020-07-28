@@ -11,3 +11,4 @@ natsort
 dash_bio
 dash_daq
 dash_extensions
+imblearn
