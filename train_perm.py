@@ -61,7 +61,7 @@ upload = dbc.Container([
 
 body = dbc.Container(
     [
-
+        dcc.Markdown(children='''___'''),
         # Uploading all files
         html.H4("Process dataset"),
         html.Div(
@@ -70,6 +70,7 @@ body = dbc.Container(
                 dbc.Spinner(html.Div(id="submiting-data-perm")),
             ]
         ),
+        html.Br(),
         
         # Create Div to place a invisible element inside
         html.Div([
@@ -105,9 +106,9 @@ body = dbc.Container(
 
 train = dbc.Container([
     html.Div([
+        dcc.Markdown(children='''___'''),
         # training
         html.H4("Train dataset"),
-        html.Br(),
         html.P("Select date range for training"),
         html.Div([
             dcc.DatePickerRange(

@@ -31,7 +31,7 @@ from train import Training
 from train_perm import Training_perm
 from eda import EDA
 from eda_perm import EDA_perm
-from userguide import userGuide, buildModel, h1bModel, permModel, aboutEDA, contactus
+from userguide import userGuide, buildModel, h1bModel, permModel, aboutEDA, contactus, documents
 
 # from constants import JOB_LEVEL_MAP,US_STATE_ABBREV
 
@@ -123,6 +123,8 @@ def display_page(pathname):
         return aboutEDA()
     elif pathname == '/contactus':
         return contactus()
+    elif pathname == '/documents':
+        return documents()
     else:
         return Homepage()
     

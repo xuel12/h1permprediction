@@ -26,12 +26,12 @@ You don't need to log in or download anything. If all you want is a quick result
 Absolutely not. All needed information for predicting is relative to your job.
 ### I was confused about some of the options on the prediction page. Can you help to explain? ###
 #### H1B part ####
-- **Wage level**  identifies your OES job level. If you don't have an OES certification yet, choose "UNKNOWN".
-- **Is there a dependent**  identifies if your employer is H-1B Dependent.
-- **Willful violator**  identifies if your employer has been previously found to be a willful violator.
+- **Select your OES Wage level**  identifies your OES job level. If you don't have an OES certification yet, choose "UNKNOWN".
+- **Is there a dependent for your employer**  identifies if your employer is H-1B Dependent.
+- **Are you a Willful violator**  identifies if your employer has been previously found to be a willful violator.
 #### PERM part ####
 - **Is it a refile?**  identifies if your application was previously filed.
-- **Select skill level**  identifies for your OES job level. If you don't have an OES certification yet, choose "UNKNOWN".
+- **Select OES skill level**  identifies for your OES job level. If you don't have an OES certification yet, choose "UNKNOWN".
 - **Does foreign worker has ownership interest?** identifies if the foreign worker has ownership interest or familial relationship with the Employer.
 - **Select minimum education acceptable** identifies the minimum U.S. diploma or degree required by the employer for the position. Valid values include “None”, “High School”, “Associate’s”, “Bachelor’s”, “Master’s”, “Doctorate", and “Other”.
 - **Is training required?** identifies whether or not training is required for the job.
@@ -39,7 +39,7 @@ Absolutely not. All needed information for predicting is relative to your job.
 - **Are job requirements normal?** indicates if the job opportunity’s requirements are normal for the occupation being offered.
 - **Is foreign language required?** indicates if knowledge of a foreign language is required to perform the job duties.
 - **Is it for a professional occupation?** identifies whether or not the application is for a professional occupation, other than a college or university professor. N = Application is not for a professional occupation other than a college or university professor.
-- **Visa class** indicates the current visa status of the foreign worker. If you do not have any current visa status, choose "UNKNOWN". For more information, please view [ETA-9089, Page 7 Section J, Item 8.](https://www.foreignlaborcert.doleta.gov/pdf/9089inst.pdf)
+- **Do you have any former admissions** indicates the current visa status of the foreign worker. If you do not have any current visa status, choose "UNKNOWN". For more information, please view [ETA-9089, Page 7 Section J, Item 8.](https://www.foreignlaborcert.doleta.gov/pdf/9089inst.pdf)
 - **Is the training done?** indicates whether the foreign worker completed the training required for the requested job opportunity. Y = The foreign worker completed the training. N = The foreign worker did not complete the training. UNKNOWN = Not applicable.
 ### What if my prediction result is 'Denied'? ###
 Our predictions are based on history data and machine learning and would not be 100% correct. Getting a 'denied' result does **NOT** mean that you would be denied in the real certifications. The real certification is much more complex, and you would be asked for much more personal information once you apply. The final result would be strongly relevant to the current policies, which is not included in our model. We also provide some useful information that you could try to improve your certification probability.
@@ -57,16 +57,13 @@ body_userguide = html.Div([
 markdown_buildmodel = '''
 ## Upload your own data to build a model ##
 ___
+
 In the update h1b/perm dataset pages, you are allowed to upload your own datasets to build unique models.
 ### What dataset should I upload? ###
 First you have to view the [offcial page of US department of labor](https://www.foreignlaborcert.doleta.gov/performancedata.cfm), click 'disclosure data' to find history datasets. You can download any datasets for H1B part or PERM part after year 2015 **(Don't change the filenames)**. Then, you can go through the datasets and do a selection on **rows**, like, selecting data form March or April, Selecting data only from software engineers, etc. 
 Do not change the column names or any other data in the datasets. 
 ### How to build a model and apply it for prediction? ###
 After getting your unique dataset, you can then upload all your selected data and click 'start processing'. After completing upload, you can go 'start training'. Finally, you could choose to use 'user-defined' model in the 'model to use' dropdown on homepage for the corresponding part.
-## Explorary Data Analysis ##
-We have prepared some interesting charts and plots for you to know more about labor certifications on H1B and PERM.
-### Looking for more? ###
-We have done our work on [kaggle](https://www.kaggle.com/yichunsun/h1bfy2019csv) with more EDAs and models for both [H1B](https://www.kaggle.com/yichunsun/project2-h1b-part) and [PERM](https://www.kaggle.com/yichunsun/project2-perm-part) part. Enjoy!
 '''
 
 body_buildmodel = html.Div([
@@ -91,34 +88,30 @@ body_abouteda = html.Div([
     )
 
 
-markdown_contactus = '''
-## Contact us ##
-___
-The source code can be found in Github [here](https://github.com/xuel12/h1permprediction).  
-If you have any more questions, please contact [Yichun Sun](sun.yichu@northeastern.edu) or [Liang Xue](xue.li@northeastern.edu) .
-'''
-
-body_contactus = html.Div([
-        dcc.Markdown(children=markdown_contactus)
-    ],
-    style={'marginLeft': 20, 'marginRight': 20, 'marginTop': 20, 'marginBottom': 20}
-    )
-
-
 markdown_h1bmodel = '''
 ## How we build our H1B model ##
 ___
 ### How we did feature selection ###
 There are hundreds of features for appliers to submit for each certification. However, most of them are either irrelevant to the result(large p-value) or have high correlation(like your prevailing wage and wage level). So first we group the features with high correlations and then do feature engineering separately.
+
 Our principles:
+
 1.Select features with small P-value.
+
 2.Select features with good interpretability.
+
 3.Cluster the features and see how could we describe a cluster comprehensively with less features.
+
 4.If more than one features are describing the same aspect of a cluster, try to use the one with less correlation with other clusters.(e.g. wage level or annual income).
+
 5.Try to use the features that are stably shown in the reports of each year if possible.
+
 6.Try to use the features that are **NOT** personal information.(This one is hard to apply so we can only choose features that are not so 'personal')
+
+
 ### How we build our model ###
 First we have to decide the data we use. Surprisingly we found that the more history data we use, the worse results we get. This is because that the policies are changing fast, as well as some features are missing in history datasets. So we have to mark them as ‘unknown’ which negatively affects the model. 
+
 Then we choose to use only 2020 dataset and do model selection. Set certified = positive and denied = negative, we concern on negative predictive value (NPV), and found that Logistic Regression gives better results than others.If you want to know more about it, you can go [kaggle notebook](https://www.kaggle.com/yichunsun/project2-h1b-part) and see how we build our model with more detailed information.
 '''
 
@@ -133,15 +126,25 @@ markdown_permmodel = '''
 ___
 ### How we did feature selection ###
 There are hundreds of features for appliers to submit for each certification. However, most of them are either irrelevant to the result(large p-value) or have high correlation(like your prevailing wage and wage level). So first we group the features with high correlations and then do feature engineering separately.
+
 Our principles:
+
 1.Select features with small P-value.
+
 2.Select features with good interpretability.
+
 3.Cluster the features and see how could we describe a cluster comprehensively with less features.
+
 4.If more than one features are describing the same aspect of a cluster, try to use the one with less correlation with other clusters.(e.g. wage level or annual income).
+
 5.Try to use the features that are stably shown in the reports of each year if possible.
+
 6.Try to use the features that are **NOT** personal information.(This one is hard to apply so we can only choose features that are not so 'personal')
+
+
 ### How we build our model ###
 First we have to decide the data we use. Surprisingly we found that the more history data we use, the worse results we get. This is because that the policies are changing fast. 
+
 Then we choose to use only 2020 dataset and do model selection. Set certified = positive and denied = negative, we concern on negative predictive value (NPV), and found that random forest gives better results than others. If you want to know more about it, you can go [kaggle notebook](https://www.kaggle.com/yichunsun/project2-perm-part) and see how we build our model with more detailed information.
 '''
 
@@ -152,10 +155,70 @@ body_permmodel = html.Div([
     )
 
 
+markdown_documents = '''
+## All relevant documents ##
+___
+Annotation file for H1B data (/doc/H1B_layout/H-1B_20_Record_Layout.pdf).  
+'''
+
+body_documents = html.Div([
+    html.H4("H1B data annotation"),
+    html.A("2020", href="https://www.foreignlaborcert.doleta.gov/pdf/PerformanceData/2020/PERM_Record_Layout.pdf"),
+    html.Br(),
+    html.A("2019", href="https://www.foreignlaborcert.doleta.gov/pdf/PerformanceData/2019/H-1B_FY19_Record_Layout.pdf"),
+    html.Br(),
+    html.A("2018", href="https://www.foreignlaborcert.doleta.gov/pdf/PerformanceData/2018/H-1B_FY18_Record_Layout.pdf"),
+    html.Br(),
+    html.A("2017", href="https://www.foreignlaborcert.doleta.gov/pdf/PerformanceData/2017/H-1B_FY17_Record_Layout.pdf"),
+    html.Br(),
+    html.A("2016", href="https://www.foreignlaborcert.doleta.gov/docs/Performance_Data/Disclosure/FY15-FY16/H1B%20Record%20Layout%20FY16.pdf"),
+    html.Br(),
+    html.A("2015", href="https://www.foreignlaborcert.doleta.gov/docs/py2015q4/H-1B_FY15_Record_Layout.docx"),
+    html.Br(),
+    html.Br(),
+
+    html.H4("PERM data annotation"),
+    html.A("2020", href="https://www.foreignlaborcert.doleta.gov/pdf/PerformanceData/2020/PERM_Record_Layout.pdf"),
+    html.Br(),
+    html.A("2019", href="https://www.foreignlaborcert.doleta.gov/pdf/PerformanceData/2019/PERM_FY19_Record_Layout.pdf"),
+    html.Br(),
+    html.A("2018", href="https://www.foreignlaborcert.doleta.gov/pdf/PerformanceData/2018/PERM_FY18_Record_Layout.pdf"),
+    html.Br(),
+    html.A("2017", href="https://www.foreignlaborcert.doleta.gov/pdf/PerformanceData/2017/PERM_FY17_Record_Layout.pdf"),
+    html.Br(),
+    html.A("2016", href="https://www.foreignlaborcert.doleta.gov/docs/Performance_Data/Disclosure/FY15-FY16/PERM_FY16_Record_Layout.pdf"),
+    html.Br(),
+    html.A("2015", href="https://www.foreignlaborcert.doleta.gov/docs/py2015q4/PERM_FY15_Record_Layout.doc"),
+        
+    # dcc.Markdown(children=markdown_documents),
+    ],
+    style={'marginLeft': 20, 'marginRight': 20, 'marginTop': 20, 'marginBottom': 20}
+    )
+
+
+markdown_contactus = '''
+## Contact us ##
+___
+The source code can be found in Github [here](https://github.com/xuel12/h1permprediction).  
+If you have any more questions, please contact [Yichun Sun](sun.yichu@northeastern.edu) or [Liang Xue](xue.li@northeastern.edu).
+
+## Job opportunity ##
+___
+Current openings can be found [here](https://pfizer.wd1.myworkdayjobs.com/PfizerCareers/job/United-States---Massachusetts---Cambridge/Postdoctoral-Researcher--Machine-Learning_4782187-1).
+'''
+
+body_contactus = html.Div([
+        dcc.Markdown(children=markdown_contactus)
+    ],
+    style={'marginLeft': 20, 'marginRight': 20, 'marginTop': 20, 'marginBottom': 20}
+    )
+
+
+
 def userGuide():
     layout = html.Div([
         nav,
-	    body_userguide,
+        body_userguide,
     ])
     return layout
 
@@ -163,7 +226,7 @@ def userGuide():
 def buildModel():
     layout = html.Div([
         nav,
-	    body_buildmodel,
+        body_buildmodel,
     ])
     return layout
 
@@ -171,16 +234,15 @@ def buildModel():
 def aboutEDA():
     layout = html.Div([
         nav,
-	    body_abouteda,
+        body_abouteda,
     ])
     return layout
-
 
 
 def contactus():
     layout = html.Div([
         nav,
-	    body_contactus,
+        body_contactus,
     ])
     return layout
 
@@ -188,7 +250,7 @@ def contactus():
 def h1bModel():
     layout = html.Div([
         nav,
-	    body_h1bmodel,
+        body_h1bmodel,
     ])
     return layout
 
@@ -196,15 +258,25 @@ def h1bModel():
 def permModel():
     layout = html.Div([
         nav,
-	    body_permmodel,
+        body_permmodel,
     ])
     return layout
 
-app = dash.Dash(__name__, external_stylesheets = [dbc.themes.UNITED])
-app.layout = userGuide()
 
+def documents():
+    layout = html.Div([
+        nav,
+        body_documents,
+    ])
+    return layout
+
+
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.UNITED])
+app.layout = userGuide()
 
 if __name__ == '__main__':
     app.run_server(debug=True)
+    
+   
     
     
