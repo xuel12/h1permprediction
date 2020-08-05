@@ -16,9 +16,6 @@ python index.py
 In the directory dialog, the path should be a folder, e.g. /user/.
 * the training data for H1B will be kept in /user/input_h1b
 * the training data for PERM will be kept in /user/input_perm
-* the discription for for training data will be kept in /user/header, naming headers.csv and PERMheaders.csv
-* the prediction data will be kept in /user/predict
 * the code will be in /user/h1permprediction
-* the model will be in /user/model
-* the temprory files will be in /user/temp
-* the output, model and temporary folder will be generated during execution under base diretory.
+* the discription for for training data will be kept in /user/h1permprediction/header, naming headers.csv and PERM_headers.csv. Examples were provided for reference.
+* the model will be in /user/h1permprediction/model. Pre-trained models were also provided for reference.
