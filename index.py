@@ -48,18 +48,16 @@ base_path = os.getcwd() + '/../'
     
 dcb = DashCallbackBlueprint() 
     
-# # Normally, Dash creates its own Flask server internally. By creating our own,
-# # we can create a route for downloading files directly:
+# Normally, Dash creates its own Flask server internally. By creating our own, we can create a route for downloading files directly:
 server = Flask(__name__)
     
 external_stylesheets=[dbc.themes.BOOTSTRAP]
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-
 app.config.suppress_callback_exceptions = True
 
 
-
+# downloading host
 @server.route(base_path + "<path:path>")
 def download(path):
     """Serve a file from the upload directory."""
@@ -72,6 +70,7 @@ app.layout = html.Div([
 ])
 
 
+# page layout
 @app.callback(Output('page-content', 'children'),
             [Input('url', 'pathname')])
 def display_page(pathname):
@@ -101,6 +100,7 @@ def display_page(pathname):
         return Homepage()
     
 
+# create file list H1B
 def uploaded_files(input_dir):
     """List the files in the upload directory."""
     files = []
@@ -111,6 +111,7 @@ def uploaded_files(input_dir):
     return files
 
 
+# create file list PERM
 def uploaded_files_perm(input_dir_perm):
     """List the files in the upload directory."""
     files = []
@@ -121,6 +122,7 @@ def uploaded_files_perm(input_dir_perm):
     return files
 
 
+# visualize list of files
 def file_download_link(filename):
     """Create a Plotly Dash 'A' element that downloads a file from the app."""
     # location = download_dir+"{}".format(urlquote(filename))
@@ -128,6 +130,7 @@ def file_download_link(filename):
     return html.A(filename)
 
 
+# list of input files H1B
 @app.callback(
     Output("file-list", "children"),
     [Input("upload-data", "filename"), Input("upload-data", "contents"), 
@@ -147,6 +150,7 @@ def update_output(uploaded_filenames, uploaded_file_contents, base_path):
         return [html.Li(file_download_link(filename)) for filename in files]
     
 
+# list of input files PERM
 @app.callback(
     Output("file-list-perm", "children"),
     [Input("upload-data-perm", "filename"), Input("upload-data-perm", "contents"),
@@ -167,6 +171,7 @@ def update_output_perm(uploaded_filenames, uploaded_file_contents, base_path):
         return [html.Li(file_download_link(filename)) for filename in files]
     
     
+# preprocessing start indicator H1B
 @app.callback(
     [Output('start-indicator', 'color'), Output("submiting-data", "children")],
     [Input("submit-data", "n_clicks")])
@@ -180,6 +185,7 @@ def start_indicator(n_clicks):
     return color, ""
 
 
+# preprocessing start indicator PERM
 @app.callback(
     [Output('start-indicator-perm', 'color'), Output("submiting-data-perm", "children")],
     [Input("submit-data-perm", "n_clicks")])
@@ -193,6 +199,7 @@ def start_indicator_perm(n_clicks):
     return color, ""
 
 
+# update input files H1B
 @app.callback(
     Output('csvreader-status', 'value'),
     # specify the component and its property that shall contain the output
@@ -212,6 +219,7 @@ def update_data(color, base_path):  # define the function reaching output from i
         return -1
 
 
+# update input files PERM
 @app.callback(
     Output('csvreader-status-perm', 'value'),
     # specify the component and its property that shall contain the output
@@ -231,6 +239,7 @@ def update_data_perm(color, base_path):  # define the function reaching output f
         return -1
     
     
+# indicator for csv parsing status H1B
 @app.callback(
     Output('xlsx2csv-indicator', 'color'),
     # specify the component and its property that shall contain the output
@@ -243,6 +252,7 @@ def xlsx2csv_indicator(status):
     return color
 
 
+# indicator for csv parsing status PERM
 @app.callback(
     Output('xlsx2csv-indicator-perm', 'color'),
     # specify the component and its property that shall contain the output
@@ -255,6 +265,7 @@ def xlsx2csv_indicator_perm(status):
     return color
 
 
+# indicator for preprocess status H1B
 @app.callback(
     [Output('parsing status', 'children'), Output('combinecsv-status', 'value')],
     # specify the component and its property that shall contain the output
@@ -284,6 +295,7 @@ def update_combinedata(count_newcsv, base_path):  # define the function reaching
         return '', 'wait'
 
 
+# indicator for preprocess status PERM
 @app.callback(
     [Output('parsing-status-perm', 'children'), Output('combinecsv-status-perm', 'value')],
     # specify the component and its property that shall contain the output
@@ -313,6 +325,7 @@ def update_combinedata_perm(count_newcsv, base_path):  # define the function rea
         return '', 'wait'
     
     
+# indicator for ending preprocess H1B
 @app.callback(
     Output('csvcombine-indicator', 'color'),
     # specify the component and its property that shall contain the output
@@ -325,6 +338,7 @@ def csvcombine_indicator(status):
     return color
     
  
+# indicator for ending preprocess PERM
 @app.callback(
     Output('csvcombine-indicator-perm', 'color'),
     # specify the component and its property that shall contain the output
@@ -337,6 +351,7 @@ def csvcombine_indicator_perm(status):
     return color
 
 
+# progress bar for H1B preprocessing
 @app.callback(
     [Output("progress", "value"), Output("progress", "children")],
     [Input('start-indicator', 'color'),
@@ -358,6 +373,7 @@ def data_progress(start_color, xlsx2csv_indicator, csvcombine_indicator):
     return progress, f"{progress} %" if progress >= 5 else "" 
 
 
+# progress bar for PERM preprocessing
 @app.callback(
     [Output("progress-perm", "value"), Output("progress-perm", "children")],
     [Input('start-indicator-perm', 'color'),
@@ -379,6 +395,7 @@ def data_progress_perm(start_color, xlsx2csv_indicator, csvcombine_indicator):
     return progress, f"{progress} %" if progress >= 5 else "" 
 
 
+# transform xlsx into csv for faster process H1B
 def save_file(filename, content, input_dir):
     content_type, content_string = content.split(',')
 
@@ -403,6 +420,7 @@ def save_file(filename, content, input_dir):
         ])
 
 
+# transform xlsx into csv for faster process PERM
 def save_file_perm(filename, content, input_dir_perm):
     content_type, content_string = content.split(',')
 
@@ -427,7 +445,7 @@ def save_file_perm(filename, content, input_dir_perm):
         ])
     
 
-    
+# dynamically change folder based on user input   
 def folderStruct(BASE_DIR):
     CODE_DIR = BASE_DIR + "h1permprediction/"
     INPUT_DIR = BASE_DIR + "input_h1b/"
@@ -486,7 +504,8 @@ def xlsx2csv(in_dir):
             count_newcsv = count_newcsv + 1
     return count_newcsv
                 
-    
+
+# combine datasets into one file for H1B    
 def csvCombine(input_dir, temp_dir, header_dir, outputfile, headerfile):
     # use header mapping file for parsing
     headers_df = pd.read_csv(header_dir+headerfile, index_col=0)
@@ -542,6 +561,7 @@ def csvCombine(input_dir, temp_dir, header_dir, outputfile, headerfile):
     print('There are {} records.'.format(df.shape[0]))
     
 
+# combine datasets into one file for PERM
 def csvCombine_perm(input_dir, temp_dir, header_dir, outputfile, headerfile):
 
     headers_df = pd.read_csv(header_dir + headerfile, index_col=0)
@@ -588,12 +608,14 @@ def csvCombine_perm(input_dir, temp_dir, header_dir, outputfile, headerfile):
     print('There are {} records.'.format(df.shape[0]))
 
 
+# function to translate SOC code in job category
 def jobClassifier(soc_code):
     soc_map = constants.SOC_MAP
     soc = str(soc_code).split('-')[0]        
     return soc_map.get(soc,'OTHER')
 
 
+# function to translate Job level
 def levelClassifier(job_title):
     job_title = str(job_title)
     if job_title.find('SENIOR')!=-1 or job_title.find(' II')!=-1 or job_title.find('2')!=-1 or job_title.find('3')!=-1:
@@ -604,6 +626,7 @@ def levelClassifier(job_title):
         return 'OTHER'
     
     
+# create EDA report for H1B
 def makeEDAreports(csvfile, temp_dir, model_dir):
     csvfile = 'h1b2015to2020.csv'
     df = pd.read_csv(temp_dir + csvfile, parse_dates=['CASE_SUBMITTED'])
@@ -630,6 +653,7 @@ def makeEDAreports(csvfile, temp_dir, model_dir):
     pickle_out.close()
 
 
+# create EDA report for PERM
 def makeEDAreports_perm(csvfile, temp_dir, model_dir):
     csvfile = 'perm2015to2020.csv'
     perm = pd.read_csv(temp_dir + csvfile, parse_dates=['CASE_RECEIVED_DATE'])
@@ -813,6 +837,7 @@ def predict_perm(n_clicks, modelchoice, worksite_state, refile, ownership, skill
     return 'Prediction result: {}, Certified probability is {}'.format(result, prob), color, progress
 
 
+# training procedure on H1B
 @app.callback(
     Output("train-indicator", "color"), 
     [Input("submit-training", "n_clicks"),
@@ -864,7 +889,7 @@ def UsertrainH1B(n_clicks, start_date, end_date, base_path):
         color = 'grey'
     return color
     
-
+# training procedure on PERM
 @app.callback(
     Output("train-indicator-perm", "color"), 
     [Input("submit-training-perm", "n_clicks"),
