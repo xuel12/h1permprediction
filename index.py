@@ -13,7 +13,7 @@ import os
 import re
 import glob
 import time
-from urllib.parse import quote as urlquote
+# from urllib.parse import quote as urlquote
 import subprocess
 from datetime import datetime as dt
 
@@ -33,44 +33,18 @@ from eda import EDA
 from eda_perm import EDA_perm
 from userguide import userGuide, buildModel, h1bModel, permModel, aboutEDA, contactus, documents
 
-# from constants import JOB_LEVEL_MAP,US_STATE_ABBREV
-
 import pandas as pd
 import pickle
 from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
-from imblearn.over_sampling import SMOTE
+# from sklearn.ensemble import RandomForestClassifier
+# from imblearn.over_sampling import SMOTE
 
-BASE_DIR = "/Users/xuel12/Documents/MSdatascience/DS5500datavis/project2/"
-# BASE_DIR = "/Users/42152/Desktop/"
-CODE_DIR = BASE_DIR+"h1permprediction/"
-os.chdir(CODE_DIR)
+os.chdir(os.getcwd())
 
 import constants
 
-os.chdir(constants.CODE_DIR)
-base_path = constants.BASE_PATH
-
-input_dir = constants.INPUT_DIR
-if not os.path.exists(input_dir):
-    os.makedirs(input_dir)
-temp_dir = constants.TEMP_DIR
-if not os.path.exists(temp_dir):
-    os.makedirs(temp_dir)
-input_dir_perm = constants.INPUT_DIR_PERM
-if not os.path.exists(input_dir_perm):
-    os.makedirs(input_dir_perm)
-
-header_dir = constants.HEADER_DIR
-if not os.path.exists(header_dir):
-    os.makedirs(header_dir)
-model_dir = constants.MODEL_DIR
-if not os.path.exists(model_dir):
-    os.makedirs(model_dir)
-download_dir = constants.DOWNLOAD_DIR
-if not os.path.exists(download_dir):
-    os.makedirs(download_dir)
-
+# initial directory
+base_path = os.getcwd() + '/../'
     
 dcb = DashCallbackBlueprint() 
     
@@ -78,20 +52,18 @@ dcb = DashCallbackBlueprint()
 # # we can create a route for downloading files directly:
 server = Flask(__name__)
     
-# external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 external_stylesheets=[dbc.themes.BOOTSTRAP]
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-# app = dash.Dash(__name__, external_stylesheets=[dbc.themes.UNITED])
 
 app.config.suppress_callback_exceptions = True
 
 
-    
-@server.route(constants.DOWNLOAD_DIR + "<path:path>")
+
+@server.route(base_path + "<path:path>")
 def download(path):
     """Serve a file from the upload directory."""
-    return send_from_directory(input_dir, path, as_attachment=True)
+    return send_from_directory(base_path, path, as_attachment=True)
 
 
 app.layout = html.Div([
@@ -129,18 +101,46 @@ def display_page(pathname):
         return Homepage()
     
 
+def uploaded_files(input_dir):
+    """List the files in the upload directory."""
+    files = []
+    for filename in os.listdir(input_dir):
+        path = os.path.join(input_dir, filename)
+        if os.path.isfile(path):
+            files.append(filename)
+    return files
+
+
+def uploaded_files_perm(input_dir_perm):
+    """List the files in the upload directory."""
+    files = []
+    for filename in os.listdir(input_dir_perm):
+        path = os.path.join(input_dir_perm, filename)
+        if os.path.isfile(path):
+            files.append(filename)
+    return files
+
+
+def file_download_link(filename):
+    """Create a Plotly Dash 'A' element that downloads a file from the app."""
+    # location = download_dir+"{}".format(urlquote(filename))
+    # return html.A(filename, href=location)
+    return html.A(filename)
+
+
 @app.callback(
     Output("file-list", "children"),
-    [Input("upload-data", "filename"), Input("upload-data", "contents")],
-)
-def update_output(uploaded_filenames, uploaded_file_contents):
+    [Input("upload-data", "filename"), Input("upload-data", "contents"), 
+     Input('input-on-submit','value')])
+def update_output(uploaded_filenames, uploaded_file_contents, base_path):
     """Save uploaded files and regenerate the file list."""
+    input_dir = folderStruct(base_path)['input_dir']
 
     if uploaded_filenames is not None and uploaded_file_contents is not None:
         for name, data in zip(uploaded_filenames, uploaded_file_contents):
-            save_file(name, data)
+            save_file(name, data, input_dir)
 
-    files = uploaded_files()
+    files = uploaded_files(input_dir)
     if len(files) == 0:
         return [html.Li("No files yet!")]
     else:
@@ -149,18 +149,17 @@ def update_output(uploaded_filenames, uploaded_file_contents):
 
 @app.callback(
     Output("file-list-perm", "children"),
-    [Input("upload-data-perm", "filename"), Input("upload-data-perm", "contents")],
-)
-def update_output_perm(uploaded_filenames, uploaded_file_contents):
+    [Input("upload-data-perm", "filename"), Input("upload-data-perm", "contents"),
+     Input('input-on-submit-perm','value')])
+def update_output_perm(uploaded_filenames, uploaded_file_contents, base_path):
     """Save uploaded files and regenerate the file list."""
+    input_dir_perm = folderStruct(base_path)['input_dir_perm']
 
     if uploaded_filenames is not None and uploaded_file_contents is not None:
         for name, data in zip(uploaded_filenames, uploaded_file_contents):
-            save_file_perm(name, data)
-            # save_file(name, data)
+            save_file_perm(name, data, input_dir_perm)
 
-    files = uploaded_files_perm()
-    # files = uploaded_files()
+    files = uploaded_files_perm(input_dir_perm)
 
     if len(files) == 0:
         return [html.Li("No files yet!")]
@@ -196,7 +195,6 @@ def start_indicator_perm(n_clicks):
 
 @app.callback(
     Output('csvreader-status', 'value'),
-    # [Output("progress", "value"), Output("progress", "children")],
     # specify the component and its property that shall contain the output
     [Input('start-indicator', 'color')],
     # specify the component and corresponding properties that shall serve as input
@@ -209,8 +207,6 @@ def update_data(color, base_path):  # define the function reaching output from i
 
         # convert xlsx to csv for faster process        
         count_newcsv = xlsx2csv(input_dir)
-        # count_newcsv = 0
-        # return progress, f"{progress} %" if progress >= 5 else ""
         return count_newcsv
     else:
         return -1
@@ -218,7 +214,6 @@ def update_data(color, base_path):  # define the function reaching output from i
 
 @app.callback(
     Output('csvreader-status-perm', 'value'),
-    # [Output("progress", "value"), Output("progress", "children")],
     # specify the component and its property that shall contain the output
     [Input('start-indicator-perm', 'color')],
     # specify the component and corresponding properties that shall serve as input
@@ -231,8 +226,6 @@ def update_data_perm(color, base_path):  # define the function reaching output f
 
         # convert xlsx to csv for faster process        
         count_newcsv = xlsx2csv(input_dir)
-        # count_newcsv = 0
-        # return progress, f"{progress} %" if progress >= 5 else ""
         return count_newcsv
     else:
         return -1
@@ -267,13 +260,15 @@ def xlsx2csv_indicator_perm(status):
     # specify the component and its property that shall contain the output
     [Input('csvreader-status', 'value')],
     [State('input-on-submit','value')]) 
-def update_combinedata(count_newcsv, value):  # define the function reaching output from input
+def update_combinedata(count_newcsv, base_path):  # define the function reaching output from input
     if count_newcsv != -1:
         temp_dir = folderStruct(base_path)['temp_dir']
         input_dir = folderStruct(base_path)['input_dir']
-        header_dir = folderStruct(base_path)['header_dir']
-        model_dir = folderStruct(base_path)['model_dir']
-
+        # header_dir = folderStruct(base_path)['header_dir']
+        # model_dir = folderStruct(base_path)['model_dir']
+        model_dir = constants.MODEL_DIR
+        header_dir = constants.HEADER_DIR()
+        
         outputfile = 'h1b2015to2020.csv'
         headerfile = 'headers.csv'
         
@@ -284,7 +279,6 @@ def update_combinedata(count_newcsv, value):  # define the function reaching out
         makeEDAreports(outputfile, temp_dir, model_dir)
 
         finish_message = 'Data parsing complete, find the parsed combineCSV in directory'
-        # return progress, f"{progress} %" if progress >= 5 else ""
         return finish_message, 'done'
     else:
         return '', 'wait'
@@ -295,12 +289,15 @@ def update_combinedata(count_newcsv, value):  # define the function reaching out
     # specify the component and its property that shall contain the output
     [Input('csvreader-status-perm', 'value')],
     [State('input-on-submit-perm','value')]) 
-def update_combinedata_perm(count_newcsv, value):  # define the function reaching output from input
+def update_combinedata_perm(count_newcsv, base_path):  # define the function reaching output from input
     if count_newcsv != -1:
         input_dir = folderStruct(base_path)['input_dir_perm']
         temp_dir = folderStruct(base_path)['temp_dir']
-        header_dir = folderStruct(base_path)['header_dir']
-        model_dir = folderStruct(base_path)['model_dir']
+        # header_dir = folderStruct(base_path)['header_dir']
+        # model_dir = folderStruct(base_path)['model_dir']
+        model_dir = constants.MODEL_DIR
+        header_dir = constants.HEADER_DIR()
+
         outputfile = 'perm2015to2020.csv'
         headerfile = 'PERM_headers.csv'
         
@@ -311,7 +308,6 @@ def update_combinedata_perm(count_newcsv, value):  # define the function reachin
         makeEDAreports_perm(outputfile, temp_dir, model_dir)
 
         finish_message = 'Data parsing complete, find the parsed combineCSV in directory'
-        # return progress, f"{progress} %" if progress >= 5 else ""
         return finish_message, 'done'
     else:
         return '', 'wait'
@@ -383,7 +379,7 @@ def data_progress_perm(start_color, xlsx2csv_indicator, csvcombine_indicator):
     return progress, f"{progress} %" if progress >= 5 else "" 
 
 
-def save_file(filename, content):
+def save_file(filename, content, input_dir):
     content_type, content_string = content.split(',')
 
     decoded = base64.b64decode(content_string)
@@ -407,7 +403,7 @@ def save_file(filename, content):
         ])
 
 
-def save_file_perm(filename, content):
+def save_file_perm(filename, content, input_dir_perm):
     content_type, content_string = content.split(',')
 
     decoded = base64.b64decode(content_string)
@@ -430,47 +426,18 @@ def save_file_perm(filename, content):
             'There was an error processing this file.'
         ])
     
-    
-def uploaded_files():
-    """List the files in the upload directory."""
-    files = []
-    for filename in os.listdir(input_dir):
-        path = os.path.join(input_dir, filename)
-        if os.path.isfile(path):
-            files.append(filename)
-    return files
-
-
-def uploaded_files_perm():
-    """List the files in the upload directory."""
-    files = []
-    for filename in os.listdir(input_dir_perm):
-        path = os.path.join(input_dir_perm, filename)
-        if os.path.isfile(path):
-            files.append(filename)
-    return files
-
-
-def file_download_link(filename):
-    """Create a Plotly Dash 'A' element that downloads a file from the app."""
-    location = download_dir+"{}".format(urlquote(filename))
-    return html.A(filename, href=location)
 
     
 def folderStruct(BASE_DIR):
     CODE_DIR = BASE_DIR + "h1permprediction/"
     INPUT_DIR = BASE_DIR + "input_h1b/"
-    # PREDICT_DIR = BASE_PATH + "predict/"
     TEMP_DIR = BASE_DIR + "temp/"
     INPUT_DIR_PERM = BASE_DIR + "input_perm/"
-    # PREDICT_DIR = BASE_PATH + "predict/"
-    # OUTPUT_DIR = BASE_PATH + "output/"
     DOWNLOAD_DIR = BASE_DIR + "download/"
     HEADER_DIR = CODE_DIR + 'header/'
     MODEL_DIR = CODE_DIR + "model/"
 
-    os.chdir(CODE_DIR)
-    # base_path = BASE_PATH
+    # os.chdir(CODE_DIR)
     input_dir = INPUT_DIR
     if not os.path.exists(input_dir):
         os.makedirs(input_dir)
@@ -521,8 +488,6 @@ def xlsx2csv(in_dir):
                 
     
 def csvCombine(input_dir, temp_dir, header_dir, outputfile, headerfile):
-    # outputfile = temp_dir+outputfile    #specify filepath+filename of output csv
-
     # use header mapping file for parsing
     headers_df = pd.read_csv(header_dir+headerfile, index_col=0)
 
@@ -556,9 +521,6 @@ def csvCombine(input_dir, temp_dir, header_dir, outputfile, headerfile):
     # uppercase all string for consistency  
     df = df.apply(lambda x: x.astype(str).str.upper())
     df['CASE_SUBMITTED'] = pd.to_datetime(df['CASE_SUBMITTED'])
-    # df1 = df.fillna(value={'PREVAILING_WAGE': 0.0})
-    # df2 = df1[df1["PREVAILING_WAGE"] == 'NAN']
-
 
     # mapping value based on mapping file    
     df['PW_WAGE_LEVEL'] = df['PW_WAGE_LEVEL'].replace(constants.PW_WAGE_LEVEL_MAP)
@@ -577,10 +539,8 @@ def csvCombine(input_dir, temp_dir, header_dir, outputfile, headerfile):
     df['JOB_LEVEL']=df['JOB_TITLE'].apply(lambda x: levelClassifier(x))
 
     df.to_csv(temp_dir+outputfile, index=False)
-
     print('There are {} records.'.format(df.shape[0]))
     
-    # return df
 
 def csvCombine_perm(input_dir, temp_dir, header_dir, outputfile, headerfile):
 
@@ -588,7 +548,6 @@ def csvCombine_perm(input_dir, temp_dir, header_dir, outputfile, headerfile):
 
     # loop through all csv files in header file
     listofdataframes = []
-    # csvfilenames = 'H-1B_Disclosure_Data_FY15_Q4'
     for csvfilenames in headers_df.to_dict().keys():
         csvfile = input_dir + csvfilenames + '.csv'
         if os.path.exists(csvfile):
@@ -625,7 +584,6 @@ def csvCombine_perm(input_dir, temp_dir, header_dir, outputfile, headerfile):
     df = df.fillna('UNKNOWN')
     df = df.replace({'NAN': 'UNKNOWN'})
 
-            
     df.to_csv(temp_dir + outputfile, index=False)
     print('There are {} records.'.format(df.shape[0]))
 
@@ -650,7 +608,6 @@ def makeEDAreports(csvfile, temp_dir, model_dir):
     csvfile = 'h1b2015to2020.csv'
     df = pd.read_csv(temp_dir + csvfile, parse_dates=['CASE_SUBMITTED'])
     df["PW_WAGE_LEVEL"] = df["PW_WAGE_LEVEL"].map(constants.JOB_LEVEL_MAP)
-    # df = df.replace('UNKOWN','UNKNOWN')
     df['countvar'] = 1
 
 
@@ -676,13 +633,8 @@ def makeEDAreports(csvfile, temp_dir, model_dir):
 def makeEDAreports_perm(csvfile, temp_dir, model_dir):
     csvfile = 'perm2015to2020.csv'
     perm = pd.read_csv(temp_dir + csvfile, parse_dates=['CASE_RECEIVED_DATE'])
-
-    # perm = perm.fillna("Unknown")
-    # perm["JOB_INFO_WORK_STATE"] = perm["JOB_INFO_WORK_STATE"].map(constants.US_STATE_ABBREV)
-    # perm["EMPLOYER_STATE"] = perm["EMPLOYER_STATE"].map(constants.US_STATE_ABBREV)
     perm['countvar'] = 1
-    # perm = perm.replace('Certified', 'CERTIFIED')
-    # perm = perm.replace('Denied', 'DENIED')
+
 
     edaplot = {}
     edaplot['CASE_STATUS'] = perm.groupby('CASE_STATUS').count()
@@ -723,11 +675,11 @@ def makeEDAreports_perm(csvfile, temp_dir, model_dir):
         Input("PW_UNIT_OF_PAY_dropdown", "value"),
         Input("PW_WAGE_LEVEL_dropdown", "value"),
         Input("H-1B_DEPENDENT_dropdown", "value"),
-        Input("WILLFUL_VIOLATOR_dropdown", "value")
-    ])
+        Input("WILLFUL_VIOLATOR_dropdown", "value")])
 def predict_h1b(n_clicks, modelchoice, employer_state, worksite_state, job_category, job_level, 
                       fulltime_position, wage_unit, wage_level, dependent, violator):
-    model_dir = folderStruct(base_path)['model_dir']
+    # model_dir = folderStruct(base_path)['model_dir']
+    model_dir = constants.MODEL_DIR
 
     input_dict = {
         "EMPLOYER_STATE": [employer_state],
@@ -740,18 +692,6 @@ def predict_h1b(n_clicks, modelchoice, employer_state, worksite_state, job_categ
         "H-1B_DEPENDENT":[dependent],
         "WILLFUL_VIOLATOR":[violator],
     }
-
-    # input_dict = {
-    #     "EMPLOYER_STATE": ['CA'],
-    #     "WORKSITE_STATE": ['CA'],
-    #     "JOB_CATEGORY": ['SCIENTISTS'],
-    #     "JOB_LEVEL": ['SENIOR'],
-    #     "FULL_TIME_POSITION":['Y'],
-    #     "PW_UNIT_OF_PAY":['YEAR'],
-    #     "PW_WAGE_LEVEL":['UNKNOWN'],
-    #     "H-1B_DEPENDENT":['N'],
-    #     "WILLFUL_VIOLATOR":['N'],
-    # }
     
     if modelchoice == 'Pre-trained':
         model_filename = 'H1B_LR_MODEL_2020.pickle'
@@ -783,16 +723,11 @@ def predict_h1b(n_clicks, modelchoice, employer_state, worksite_state, job_categ
     if n_clicks % 2 == 1:
         time.sleep(1)
         progress = 'Done'
-        # result = model.predict(np.array([[0]*151]))[0]
         result, prob = [model.predict(data)[0], model.predict_proba(data)[0][0]]
     else:
         progress = 'Standby'
         result, prob = ['Not available','Not available']
 
-
-    # data20 = df[cate_column_name].iloc[:100,].copy()
-    # data20 = pd.get_dummies(data20, columns=cate_column_name)
-    # data20 = data20.reset_index(drop=True)
     return 'Prediction result: {}, Certified probability is {}'.format(result, prob), color, progress
 
 
@@ -815,12 +750,12 @@ def predict_h1b(n_clicks, modelchoice, employer_state, worksite_state, job_categ
      Input("PERM_RECR_INFO_COLL_UNIV_TEACHER_dropdown", "value"),
      Input("PERM_FW_INFO_BIRTH_COUNTRY_dropdown", "value"),
      Input("PERM_CLASS_OF_ADMISSION_dropdown", "value"),
-     Input("PERM_FW_INFO_TRAINING_COMP_dropdown", "value")
-    ])
+     Input("PERM_FW_INFO_TRAINING_COMP_dropdown", "value")])
 def predict_perm(n_clicks, modelchoice, worksite_state, refile, ownership, skill_level,
                       education, training_required, alt_field, require_normal, foregin_language,
                       professional, college_teacher, birthcountry, visa_class, training_complete):
-    model_dir = folderStruct(base_path)['model_dir']
+    # model_dir = folderStruct(base_path)['model_dir']
+    model_dir = constants.MODEL_DIR
 
     input_dict = {
         "WORKSITE_STATE": [worksite_state],
@@ -875,10 +810,6 @@ def predict_perm(n_clicks, modelchoice, worksite_state, refile, ownership, skill
         progress = 'Standby'
         result, prob = ['Not available','Not available']
 
-
-    # data20 = df[cate_column_name].iloc[:100,].copy()
-    # data20 = pd.get_dummies(data20, columns=cate_column_name)
-    # data20 = data20.reset_index(drop=True)
     return 'Prediction result: {}, Certified probability is {}'.format(result, prob), color, progress
 
 
@@ -886,12 +817,12 @@ def predict_perm(n_clicks, modelchoice, worksite_state, refile, ownership, skill
     Output("train-indicator", "color"), 
     [Input("submit-training", "n_clicks"),
      Input('h1b-date-picker-range', 'start_date'),
-     Input('h1b-date-picker-range', 'end_date')]
-    )
-def UsertrainH1B(n_clicks, start_date, end_date):
+     Input('h1b-date-picker-range', 'end_date')],
+    [State('input-on-submit','value')]) 
+def UsertrainH1B(n_clicks, start_date, end_date, base_path):
     temp_dir = folderStruct(base_path)['temp_dir']
-    model_dir = folderStruct(base_path)['model_dir']
-        
+    # model_dir = folderStruct(base_path)['model_dir']
+    model_dir = constants.MODEL_DIR
         
     if n_clicks % 2 == 1:
         df = pd.read_csv(temp_dir+'h1b2015to2020.csv', parse_dates=['CASE_SUBMITTED'])
@@ -938,11 +869,12 @@ def UsertrainH1B(n_clicks, start_date, end_date):
     Output("train-indicator-perm", "color"), 
     [Input("submit-training-perm", "n_clicks"),
      Input('perm-date-picker-range', 'start_date'),
-     Input('perm-date-picker-range', 'end_date')]
-    )
-def UsertrainPERM(n_clicks, start_date, end_date):
+     Input('perm-date-picker-range', 'end_date')],
+    [State('input-on-submit-perm','value')]) 
+def UsertrainPERM(n_clicks, start_date, end_date, base_path):
     temp_dir = folderStruct(base_path)['temp_dir']
-    model_dir = folderStruct(base_path)['model_dir']
+    # model_dir = folderStruct(base_path)['model_dir']
+    model_dir = constants.MODEL_DIR
 
     if n_clicks % 2 == 1:
         df = pd.read_csv(temp_dir+'perm2015to2020.csv', parse_dates=['CASE_RECEIVED_DATE'])
